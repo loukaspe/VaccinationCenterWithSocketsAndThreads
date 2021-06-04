@@ -1,3 +1,4 @@
+#include "TravelMonitorClient.h"
 #include <getopt.h>
 
 const char *PROGRAM_OPTIONS = "m:b:c:s:i:t:";
@@ -39,6 +40,17 @@ int main(int argc, char *argv[]) {
                 Helper::handleError(WRONG_PROGRAM_USAGE_ERROR);
         }
     }
+
+    TravelMonitorClient *travelMonitor = new TravelMonitorClient(
+            numberOfMonitors,
+            socketBufferSize,
+            cyclicBufferSize,
+            bloomSizeInKiloBytes,
+            inputDirectory,
+            numberOfThreads
+    );
+
+    travelMonitor->createMonitorsAndPassThemData();
 
     return 0;
 }
