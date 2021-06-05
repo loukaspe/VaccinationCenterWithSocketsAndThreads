@@ -17,7 +17,26 @@ TravelMonitorClient::TravelMonitorClient(
         bloomSizeInKiloBytes(bloomSizeInKiloBytes),
         inputDirectory(inputDirectory),
         numberOfThreads(numberOfThreads) {
+
     this->bloomFilters = new BloomFilterLinkedList();
+
+    // We need numberOfMonitors sockets: one foreach monitorServer
+    // We initialise the sockets' variables' arrays
+    // Ports are set serially from an initial value (ie 10001, 10002, 10003 etc)
+    this->createdSocketFds = (int *) malloc(numberOfMonitors * sizeof(int));
+    this->acceptedSocketFds = (int *) malloc(numberOfMonitors * sizeof(int));
+    this->ports = (int *) malloc(numberOfMonitors * sizeof(int));
+    this->servers = (struct sockaddr_in *) malloc(numberOfMonitors * sizeof(struct sockaddr_in));
+    this->serversPointers = (struct sockaddr **) malloc(numberOfMonitors * sizeof(struct sockaddr *));
+    this->clients = (struct sockaddr_in *) malloc(numberOfMonitors * sizeof(struct sockaddr_in));
+    this->clientsPointers = (struct sockaddr **) malloc(numberOfMonitors * sizeof(struct sockaddr *));
+
+    for (int i = 0; i < numberOfMonitors; i++) {
+        serversPointers[i] = (struct sockaddr *) &servers[i];
+        clientsPointers[i] = (struct sockaddr *) &clients[i];
+        ports[i] = INITIAL_PORT + i;
+    }
+
     createMonitorArguments();
 }
 
@@ -46,12 +65,13 @@ void TravelMonitorClient::createMonitorArguments() {
         );
 
         int numberOfArgsForMonitor = NUMBER_OF_MONITOR_ARGS_WITHOUT_COUNTRIES_PATHS
-        + numberOfCountriesPassedToMonitor;
+                                     + numberOfCountriesPassedToMonitor;
 
         this->monitorArguments[i] = (char **) malloc(numberOfArgsForMonitor * sizeof(char *));
         this->monitorArguments[i][0] = "./monitorServer";
         this->monitorArguments[i][1] = "-p";
-        this->monitorArguments[i][2] = "porta";
+        this->monitorArguments[i][2] = (char *) malloc(10 * sizeof(char));
+        sprintf(this->monitorArguments[i][2], "%d", ports[i]);
         this->monitorArguments[i][3] = "-b";
         this->monitorArguments[i][4] = (char *) malloc(10 * sizeof(char));
         sprintf(this->monitorArguments[i][4], "%d", this->socketBufferSize);
@@ -72,7 +92,8 @@ void TravelMonitorClient::createMonitorArguments() {
             divisionRemainder = j % numberOfMonitors;
 
             if (divisionRemainder == i) {
-                this->monitorArguments[i][NUMBER_OF_MONITOR_ARGS_WITHOUT_COUNTRIES_PATHS - 1 + temp] = countrySubdirectories[j];
+                this->monitorArguments[i][NUMBER_OF_MONITOR_ARGS_WITHOUT_COUNTRIES_PATHS - 1 +
+                                          temp] = countrySubdirectories[j];
                 temp++;
             }
         }
@@ -83,6 +104,8 @@ void TravelMonitorClient::createMonitorArguments() {
 }
 
 void TravelMonitorClient::createMonitorsAndPassThemData() {
+    // Helpful variable for the socket calling
+    socklen_t clientLength;
     for (int i = 0; i < this->numberOfMonitors; i++) {
         pid_t id = fork();
 
@@ -100,7 +123,73 @@ void TravelMonitorClient::createMonitorsAndPassThemData() {
             exit(0);
         }
 
-
+        this->createSocketForMonitor(i);
+        this->bindToSocketForMonitor(i);
+        this->listenToSocketForMonitor(i);
+        this->acceptSocketForMonitor(i);
     }
+
+    //Wait for results from all with select()
+    cout << readNumberFromSocket(0) << endl;
+    for(int i = 0; i < numberOfMonitors; i++) {
+        closeSocket(i);
+    }
+
     wait(NULL);
+}
+
+void TravelMonitorClient::createSocketForMonitor(int i) {
+    if (
+        (createdSocketFds[i] = socket(AF_INET, SOCK_STREAM, 0)) < 0
+    ) {
+        Helper::handleError("Error in creating socket", errno);
+    }
+
+    servers[i].sin_family = AF_INET;
+    servers[i].sin_addr.s_addr = htonl(INADDR_ANY);
+    servers[i].sin_port = htons(ports[i]);
+}
+
+void TravelMonitorClient::bindToSocketForMonitor(int i) {
+    if (
+        bind(createdSocketFds[i], serversPointers[i], sizeof(servers[i])) < 0
+    ) {
+        Helper::handleError("Error in binding socket", errno);
+    }
+}
+
+void TravelMonitorClient::listenToSocketForMonitor(int i) {
+    if (
+        // We listen to one connection per monitor
+        listen(createdSocketFds[i], 1) < 0
+    ) {
+        Helper::handleError("Error in listening to socket", errno);
+    }
+}
+
+void TravelMonitorClient::acceptSocketForMonitor(int i) {
+    socklen_t clientLength = sizeof(clients[i]);
+
+    if (
+        (acceptedSocketFds[i] = accept(createdSocketFds[i], clientsPointers[i], &clientLength))< 0
+    ) {
+        Helper::handleError("Error in accepting socket connection", errno);
+    }
+
+//    close(createdSocketFds[i]);
+}
+
+int TravelMonitorClient::readNumberFromSocket(int i) {
+    int number;
+
+    if(read(acceptedSocketFds[i], &number, sizeof(int)) < 0) {
+        Helper::handleError("Error reading from socket", errno);
+    }
+
+    return number;
+}
+
+void TravelMonitorClient::closeSocket(int i) {
+    close(createdSocketFds[i]);
+    close(acceptedSocketFds[i]);
 }
