@@ -15,15 +15,13 @@ Socket::Socket(int bufferSize, int port) : bufferSize(bufferSize), port(port) {
 
 Socket::~Socket() {}
 
-void Socket::createSocket() {
+void Socket::createSocket(struct hostent *host) {
     if (
         (createdSocketFd = socket(AF_INET, SOCK_STREAM, 0)) < 0
     ) {
         Helper::handleError(CREATE_ERROR, errno);
     }
-}
 
-void Socket::bindToSocket(struct hostent *host) {
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
 
@@ -32,7 +30,9 @@ void Socket::bindToSocket(struct hostent *host) {
     } else {
         memcpy(&server.sin_addr, host->h_addr, host->h_length);
     }
+}
 
+void Socket::bindToSocket() {
     if (
         bind(createdSocketFd, serverPointer, sizeof(server)) < 0
     ) {
