@@ -8,17 +8,22 @@ const char* Socket::CONNECT_ERROR = "Error connecting to socket";
 const char* Socket::READ_ERROR = "Error reading from socket";
 const char* Socket::WRITE_ERROR = "Error writing to socket";
 
-Socket::Socket(int bufferSize, int port) : bufferSize(bufferSize), port(port) {}
+Socket::Socket(int bufferSize, int port) : bufferSize(bufferSize), port(port) {
+    serverPointer = (struct sockaddr *) &server ;
+    clientPointer = (struct sockaddr *) &client ;
+}
 
 Socket::~Socket() {}
 
-void Socket::createSocket(struct hostent *host) {
+void Socket::createSocket() {
     if (
         (createdSocketFd = socket(AF_INET, SOCK_STREAM, 0)) < 0
     ) {
         Helper::handleError(CREATE_ERROR, errno);
     }
+}
 
+void Socket::bindToSocket(struct hostent *host) {
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
 
@@ -27,9 +32,7 @@ void Socket::createSocket(struct hostent *host) {
     } else {
         memcpy(&server.sin_addr, host->h_addr, host->h_length);
     }
-}
 
-void Socket::bindToSocket() {
     if (
         bind(createdSocketFd, serverPointer, sizeof(server)) < 0
     ) {
