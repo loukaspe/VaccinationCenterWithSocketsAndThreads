@@ -104,34 +104,38 @@ void Socket::writeNumber(int number) {
 
 
 char *Socket::readStringInChunks(int totalBytes) {
-    char* string = (char*) malloc(totalBytes * sizeof(char));
-    if (string == NULL) {
-        Helper::handleError("Error: Could not allocate memory", errno);
-    }
+    char string[totalBytes];
 
     if(totalBytes < this->bufferSize) {
         if (::read(acceptedSocketFd, string, totalBytes) < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
 
-        return string;
+        return Helper::copyString(string);
     }
 
-    char rawBytes[this->bufferSize];
+    char rawBytes[this->bufferSize + 1];
     int readBytes = 0;
     int chunk;
 
     while(readBytes < totalBytes) {
         chunk = ::read(acceptedSocketFd, rawBytes, this->bufferSize);
+        rawBytes[this->bufferSize] = '\0';
         if (chunk < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
 
-        strncat(string, rawBytes, chunk);
+        if(readBytes == 0) {
+            strncpy(string, rawBytes, chunk);
+            string[this->bufferSize] = '\0';
+        } else {
+            strncat(string, rawBytes, chunk);
+        }
+
         readBytes += chunk;
     }
 
-    return string;
+    return Helper::copyString(string);
 }
 
 

@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     socket->createSocket(host);
     socket->connectToSocket();
 
-    char* test = "abcdefghigklmnopqrstucwxyz";
+    char* test = "this is a huge string, like my .. hmmm lets get serious this is a very big string end.";
     int testLength = strlen(test) + 1;
 
     socket->writeNumber(testLength);
