@@ -22,6 +22,19 @@ void Socket::createSocket(struct hostent *host) {
         Helper::handleError(CREATE_ERROR, errno);
     }
 
+    int enableReusableAddresses = 1;
+    int enableReusableAddressesResult = setsockopt(
+        createdSocketFd,
+        SOL_SOCKET,
+        SO_REUSEADDR,
+        (char *)&enableReusableAddresses,
+        sizeof(enableReusableAddresses)
+    );
+    if (enableReusableAddressesResult < 0)
+    {
+        Helper::handleError("Error: Could not enable reusable addresses", errno);
+    }
+
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
 
