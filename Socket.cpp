@@ -40,16 +40,18 @@ void Socket::bindToSocket() {
     }
 }
 
-void Socket::listenToSocket() {
+int Socket::listenToSocket() {
     // One Socket Per Connection
     if (
         listen(createdSocketFd, 1) < 0
     ) {
         Helper::handleError(LISTEN_ERROR, errno);
     }
+
+    return createdSocketFd;
 }
 
-void Socket::acceptSocket() {
+int Socket::acceptSocket() {
     socklen_t clientLength = sizeof(client);
 
     if (
@@ -58,6 +60,7 @@ void Socket::acceptSocket() {
         Helper::handleError(ACCEPT_ERROR, errno);
     }
 
+    return acceptedSocketFd;
 //    close(createdSocketFds[i]);
 }
 

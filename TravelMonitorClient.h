@@ -31,6 +31,7 @@ private:
     char*** monitorArguments;
     Socket** sockets;
     int *ports;
+    int *acceptedSocketFds;
 
     void createMonitorArguments();
 

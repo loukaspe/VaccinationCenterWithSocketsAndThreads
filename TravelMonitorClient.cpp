@@ -23,6 +23,7 @@ TravelMonitorClient::TravelMonitorClient(
     // Ports are set serially from an initial value (ie 10001, 10002, 10003 etc)
     this->sockets = (Socket**) malloc(numberOfMonitors * sizeof(Socket*));
     this->ports = (int*) malloc(numberOfMonitors * sizeof(int));
+    this->acceptedSocketFds = (int*) malloc(numberOfMonitors * sizeof(int));
 
     for (int i = 0; i < numberOfMonitors; i++) {
         ports[i] = INITIAL_PORT + i;
@@ -121,7 +122,7 @@ void TravelMonitorClient::createMonitorsAndPassThemData() {
         this->sockets[i]->createSocket();
         this->sockets[i]->bindToSocket();
         this->sockets[i]->listenToSocket();
-        this->sockets[i]->acceptSocket();
+        acceptedSocketFds[i] = this->sockets[i]->acceptSocket();
     }
 
     //Wait for results from all with select()

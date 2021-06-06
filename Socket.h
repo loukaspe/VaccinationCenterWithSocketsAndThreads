@@ -29,8 +29,8 @@ public:
     ~Socket();
     void createSocket(struct hostent * = NULL);
     void bindToSocket();
-    void listenToSocket();
-    void acceptSocket();
+    int listenToSocket();
+    int acceptSocket();
     void connectToSocket();
     int readNumber();
     void writeNumber(int);
