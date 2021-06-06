@@ -1,10 +1,6 @@
-#include "PipeReader.h"
-#include "PipeWriter.h"
 #include "MonitorServer.h"
 #include <getopt.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
+#include "Socket.h"
 
 static const int NUMBER_OF_OPTIONS_ARGUMENTS = 10;
 using namespace std;
@@ -28,21 +24,15 @@ int main(int argc, char **argv) {
     struct hostent *host;
     char hostname[256];
 
-    // Socket variables
-    int socketFd;
-    struct sockaddr_in server;
-    struct sockaddr *serverPointer = (struct sockaddr *) &server;
-
-
     // Number of paths given to the monitor server is equal to the argc - numberOfOptionArguments
     // (for example -b bufferSize) - 1 (the program name)
     int numberOfPaths = argc - NUMBER_OF_OPTIONS_ARGUMENTS - 1;
 
     char **paths = getPathsNameFromCommandLineArguments(numberOfPaths, argv, argc);
 
-    for (int i = 0; i < argc; i++) {
-        cout << argv[i] << endl;
-    }
+//    for (int i = 0; i < argc; i++) {
+//        cout << argv[i] << endl;
+//    }
 
     while ((opt = getopt(argc, argv, PROGRAM_OPTIONS)) != -1) {
         switch (opt) {
@@ -66,10 +56,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    /* Create socket */
-    if ((socketFd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        Helper::handleError("Error creating socket");
-    }
+    Socket *socket = new Socket(socketBufferSize, port);
 
     int hostNameResult = gethostname(hostname, sizeof(hostname));
     if (hostNameResult == -1) {
@@ -78,26 +65,11 @@ int main(int argc, char **argv) {
 
     host = gethostbyname(hostname);
 
-    server.sin_family = AF_INET;
-    memcpy(&server.sin_addr, host->h_addr, host->h_length);
-    server.sin_port = htons(port);
+    socket->createSocket(host);
+    socket->connectToSocket();
 
-    /* Initiate connection */
-    if (connect(socketFd, serverPointer, sizeof(server)) < 0) {
-        Helper::handleError("Error connecting to socket", errno);
-    }
-
-//    do
-//        connectStatus = connect(clientSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress));
-//    while (connectStatus < 0);
-
-    int a = 5;
-
-    if (write(socketFd, &a, sizeof(int)) < 0) {
-        Helper::handleError("Error writing to socket");
-    }
-
-    close(socketFd);
+    socket->writeNumber(5);
+    socket->closeSocket();
 
     return 0;
 }
