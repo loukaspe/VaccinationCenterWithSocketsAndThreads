@@ -51,6 +51,7 @@ int main(int argc, char *argv[]) {
     );
 
     travelMonitor->createMonitorsAndPassThemData();
+    travelMonitor->readDataFromMonitors();
 
     return 0;
 }

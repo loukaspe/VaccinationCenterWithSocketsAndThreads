@@ -102,6 +102,7 @@ void TravelMonitorClient::createMonitorArguments() {
 void TravelMonitorClient::createMonitorsAndPassThemData() {
     // Helpful variable for the socket calling
     socklen_t clientLength;
+
     for (int i = 0; i < this->numberOfMonitors; i++) {
         pid_t id = fork();
 
@@ -124,11 +125,59 @@ void TravelMonitorClient::createMonitorsAndPassThemData() {
         this->sockets[i]->listenToSocket();
         acceptedSocketFds[i] = this->sockets[i]->acceptSocket();
     }
+}
 
-    //Wait for results from all with select()
-    cout << this->sockets[0]->readNumber() << endl;
+void TravelMonitorClient::readDataFromMonitors() {
+    struct pollfd pollFds[numberOfMonitors];
+
+    memset(pollFds, 0 , sizeof(pollFds));
+
     for(int i = 0; i < numberOfMonitors; i++) {
-        this->sockets[i]->closeSocket();
+        pollFds[i].fd = acceptedSocketFds[i];
+        pollFds[i].events = POLLIN;
+    }
+    
+    int numberOfFds = numberOfMonitors;
+    
+    bool isAllDataReceived = false;
+    for(;;) {
+        for(int i = 0; i < numberOfMonitors; i++) {
+            if(pollFds[i].fd != -1) {
+                isAllDataReceived = false;
+                break;
+            }
+        }
+
+        if(isAllDataReceived == true) {
+            break;
+        }
+
+        int pollResult = poll(pollFds, numberOfFds, NO_POLL_TIMEOUT);
+
+        if(pollResult == -1) {
+            Helper::handleError("Error with poll()", errno);
+        }
+
+        if(pollResult == 0) {
+            Helper::handleError("Error: poll timeout");
+        }
+
+        for(int i = 0; i < numberOfMonitors; i++) {
+            if (pollFds[i].revents & POLLIN) {
+                if (pollFds[i].fd == this->acceptedSocketFds[i]) {
+
+                    cout << this->sockets[i]->readNumber() << endl;
+
+                    sockets[i]->closeSocket();
+                    pollFds[i].events = 0;
+                    pollFds[i].fd = -1;
+                }
+            }
+        }
+
+        // I assume that all data is received. In the start of the loop I check if all
+        // pollFds.fd are -1, else all data is not received
+        isAllDataReceived = true;
     }
 
     wait(NULL);

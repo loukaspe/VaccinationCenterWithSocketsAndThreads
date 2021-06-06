@@ -6,6 +6,8 @@
 static const int NUMBER_OF_MONITOR_ARGS_WITHOUT_COUNTRIES_PATHS = 12;
 static const int INITIAL_PORT = 10000;
 
+static const int NO_POLL_TIMEOUT = -1;
+
 #include <iostream>
 #include <cstring>
 #include <cstdlib>
@@ -39,6 +41,7 @@ private:
 public:
     TravelMonitorClient(int, int, int, int, char*, int);
     void createMonitorsAndPassThemData();
+    void readDataFromMonitors();
 };
 
 
