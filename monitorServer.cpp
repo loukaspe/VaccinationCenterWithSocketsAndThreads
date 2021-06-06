@@ -68,7 +68,13 @@ int main(int argc, char **argv) {
     socket->createSocket(host);
     socket->connectToSocket();
 
+    char* test = "abcdefghigklmnopqrstucwxyz";
+    int testLength = strlen(test) + 1;
+
+    socket->writeNumber(testLength);
+    socket->writeStringInChunks(test);
     socket->writeNumber(5);
+
     socket->closeSocket();
 
     return 0;

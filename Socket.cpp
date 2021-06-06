@@ -102,6 +102,68 @@ void Socket::writeNumber(int number) {
     }
 }
 
+
+char *Socket::readStringInChunks(int totalBytes) {
+    char* string = (char*) malloc(totalBytes * sizeof(char));
+    if (string == NULL) {
+        Helper::handleError("Error: Could not allocate memory", errno);
+    }
+
+    if(totalBytes < this->bufferSize) {
+        if (::read(acceptedSocketFd, string, totalBytes) < 0) {
+            Helper::handleError(READ_ERROR, errno);
+        }
+
+        return string;
+    }
+
+    char rawBytes[this->bufferSize];
+    int readBytes = 0;
+    int chunk;
+
+    while(readBytes < totalBytes) {
+        chunk = ::read(acceptedSocketFd, rawBytes, this->bufferSize);
+        if (chunk < 0) {
+            Helper::handleError(READ_ERROR, errno);
+        }
+
+        strncat(string, rawBytes, chunk);
+        readBytes += chunk;
+    }
+
+    return string;
+}
+
+
+void Socket::writeStringInChunks(char* string) {
+    // Add one byte for the terminating character
+    int totalBytes = strlen(string) + 1;
+
+    int writtenBytes = 0;
+    int chunk;
+
+    if(totalBytes < this->bufferSize) {
+        if (::write(createdSocketFd, string, totalBytes) < 0) {
+            Helper::handleError(WRITE_ERROR, errno);
+        }
+
+        return;
+    }
+
+    while(writtenBytes < totalBytes) {
+        chunk = ::write(createdSocketFd, string, this->bufferSize);
+        if (chunk < 0) {
+            Helper::handleError(WRITE_ERROR, errno);
+        }
+
+        // We move the string pointer chunk chars ahead to continue the writing
+        // from the point is was stopped
+        string += chunk;
+
+        writtenBytes += chunk;
+    }
+}
+
 void Socket::closeSocket() {
     close(createdSocketFd);
     close(acceptedSocketFd);

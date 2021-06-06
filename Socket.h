@@ -34,6 +34,8 @@ public:
     void connectToSocket();
     int readNumber();
     void writeNumber(int);
+    void writeStringInChunks(char*);
+    char* readStringInChunks(int);
     void closeSocket();
 };
 
