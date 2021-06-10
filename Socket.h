@@ -36,6 +36,8 @@ public:
     void writeNumber(int);
     void writeStringInChunks(char*);
     char* readStringInChunks(int);
+    int* readArrayOfInts(int);
+    void writeArrayOfInts(int*, int);
     void closeSocket();
 };
 

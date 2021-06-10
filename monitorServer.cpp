@@ -68,12 +68,24 @@ int main(int argc, char **argv) {
     socket->createSocket(host);
     socket->connectToSocket();
 
+    /************************************
+     * TESTS FOR SOCKETS
+     ************************************/
+
     char* test = "this is a huge string, like my .. hmmm lets get serious this is a very big string end.";
     int testLength = strlen(test) + 1;
 
     socket->writeNumber(testLength);
     socket->writeStringInChunks(test);
     socket->writeNumber(5);
+
+    int numberOfElements = 100;
+    int array[numberOfElements];
+    for(int i = 0; i < numberOfElements; i++) {
+        array[i] = i;
+    }
+    socket->writeNumber(numberOfElements);
+    socket->writeArrayOfInts(array, numberOfElements);
 
     socket->closeSocket();
 

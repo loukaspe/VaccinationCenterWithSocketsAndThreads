@@ -166,9 +166,16 @@ void TravelMonitorClient::readDataFromMonitors() {
             if (pollFds[i].revents & POLLIN) {
                 if (pollFds[i].fd == this->acceptedSocketFds[i]) {
 
+                    /************************************
+                     * TESTS FOR SOCKETS
+                     ************************************/
+
                     int testLength = this->sockets[i]->readNumber();
                     cout << this->sockets[i]->readStringInChunks(testLength) << endl;
                     cout << this->sockets[i]->readNumber() << endl;
+
+                    int sizeOfArray = sockets[i]->readNumber();
+                    int* array = sockets[i]->readArrayOfInts(sizeOfArray);
 
                     sockets[i]->closeSocket();
                     pollFds[i].events = 0;

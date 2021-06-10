@@ -102,7 +102,6 @@ void Socket::writeNumber(int number) {
     }
 }
 
-
 char *Socket::readStringInChunks(int totalBytes) {
     char string[totalBytes];
 
@@ -165,6 +164,23 @@ void Socket::writeStringInChunks(char* string) {
         string += chunk;
 
         writtenBytes += chunk;
+    }
+}
+
+
+int *Socket::readArrayOfInts(int numberOfElements) {
+    int *array = (int*) malloc(numberOfElements * sizeof(int));
+
+    for(int i = 0; i < numberOfElements; i++) {
+        array[i] = readNumber();
+    }
+
+    return array;
+}
+
+void Socket::writeArrayOfInts(int* array, int numberOfElements) {
+    for(int i = 0; i < numberOfElements; i++) {
+        writeNumber(array[i]);
     }
 }
 
