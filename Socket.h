@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include "Helper.h"
+#include "BloomFilter.h"
 
 class Socket {
 private:
@@ -38,6 +39,8 @@ public:
     void writeStringInChunks(char*);
     int* readArrayOfInts(int);
     void writeArrayOfInts(int*, int);
+    BloomFilter* readBloomFilterInChunks();
+    void writeBloomFilterInChunks(BloomFilter*);
     BitArray* readBitArrayInChunks();
     void writeBitArrayInChunks(BitArray*);
     void closeSocket();

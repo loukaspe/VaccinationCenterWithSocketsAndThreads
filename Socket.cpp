@@ -259,6 +259,98 @@ BitArray* Socket::readBitArrayInChunks() {
     return bitArray;
 }
 
+
+BloomFilter *Socket::readBloomFilterInChunks() {
+    // While reading a BloomFilter, firstly we have to read it's pointer variables,
+    // and create them in order to pass them in the new BF
+    BitArray* bitArray = this->readBitArrayInChunks();
+
+    int countryNameLength = this->readNumber();
+    char* countryName = this->readStringInChunks(countryNameLength);
+
+    int virusNameLength = this->readNumber();
+    char* virusName = this->readStringInChunks(virusNameLength);
+
+    int bloomFilterSize = sizeof(BloomFilter);
+
+    BloomFilter* bloomFilter = (BloomFilter*) malloc(bloomFilterSize);
+    if (bloomFilter == NULL) {
+        Helper::handleError("Error: Could not allocate memory", errno);
+    }
+
+    if(bloomFilterSize <= this->bufferSize) {
+        if (::read(acceptedSocketFd, bloomFilter, bloomFilterSize) < 0) {
+            Helper::handleError(READ_ERROR, errno);
+        }
+
+        bloomFilter->setVirusName(virusName);
+        bloomFilter->setCountryName(countryName);
+        bloomFilter->setBitArray(bitArray);
+
+        return bloomFilter;
+    }
+
+    char rawBytes[this->bufferSize];
+    int readBytes = 0;
+    int chunk;
+
+    while(readBytes < bloomFilterSize) {
+        chunk = ::read(acceptedSocketFd, rawBytes, this->bufferSize);
+        if (chunk < 0) {
+            Helper::handleError(READ_ERROR, errno);
+        }
+
+        memcpy(bloomFilter + readBytes, rawBytes, chunk);
+        readBytes += chunk;
+    }
+
+    bloomFilter->setVirusName(virusName);
+    bloomFilter->setCountryName(countryName);
+    bloomFilter->setBitArray(bitArray);
+
+    return bloomFilter;
+}
+
+void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter) {
+    // While writing a BloomFilter, firstly we have to write it's pointer variables
+    this->writeBitArrayInChunks(bloomFilter->getBitArray());
+
+    int countryNameLength = strlen(bloomFilter->getCountryName()) + 1;
+    cout << "Size: " << countryNameLength << endl;
+    this->writeNumber(countryNameLength);
+    this->writeStringInChunks(bloomFilter->getCountryName());
+
+    int virusNameLength = strlen(bloomFilter->getVirusName()) + 1;
+    cout << "Size: " << virusNameLength << endl;
+    this->writeNumber(virusNameLength);
+    this->writeStringInChunks(bloomFilter->getVirusName());
+
+    int totalBytes = sizeof(BloomFilter);
+
+    int writtenBytes = 0;
+    int chunk;
+
+    if(totalBytes < this->bufferSize) {
+        if (::write(createdSocketFd, bloomFilter, totalBytes) < 0) {
+            Helper::handleError(WRITE_ERROR, errno + 2);
+        }
+
+        return;
+    }
+
+    while(writtenBytes < totalBytes) {
+        chunk = ::write(createdSocketFd, bloomFilter, this->bufferSize);
+        if (chunk < 0) {
+            Helper::handleError(WRITE_ERROR, errno + 3);
+        }
+
+        // We move the string pointer chunk chars ahead to continue the writing
+        // from the point is was stopped
+        bloomFilter += chunk;
+        writtenBytes += chunk;
+    }
+}
+
 void Socket::closeSocket() {
     close(createdSocketFd);
     close(acceptedSocketFd);

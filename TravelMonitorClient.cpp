@@ -182,6 +182,30 @@ void TravelMonitorClient::readDataFromMonitors() {
                     // BitArray
                     BitArray *bitArray = sockets[i]->readBitArrayInChunks();
 
+                    // Bloom Filter
+                    BloomFilter* bf = sockets[i]->readBloomFilterInChunks();
+
+                    bool a = bf->check("loukas1");
+                    cout << "T:" << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("loukas2");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("loukas3");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("loukas4");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("loukas5");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("loukas6");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("loukas7");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("giorgos");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("giannis");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    a = bf->check("kostas");
+                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+
                     sockets[i]->closeSocket();
                     pollFds[i].events = 0;
                     pollFds[i].fd = -1;

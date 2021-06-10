@@ -94,6 +94,40 @@ int main(int argc, char **argv) {
     bitArray->setBitArray(array);
     socket->writeBitArrayInChunks(bitArray);
 
+    // BloomFilter
+    BloomFilter* bf = new BloomFilter();
+    bf->setCountryName("countryCountryCountryCountry");
+    bf->setVirusName("virusVirusVirusVirus");
+    bf->add("loukas1");
+    bf->add("loukas2");
+    bf->add("loukas3");
+    bf->add("loukas4");
+    bf->add("loukas5");
+    bf->add("loukas6");
+    bf->add("loukas7");
+    bool a = bf->check("loukas1");
+    cout << "\tM:" << (a?"MAYBE":"NO") << endl;
+    a = bf->check("loukas2");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("loukas3");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("loukas4");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("loukas5");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("loukas6");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("loukas7");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("giorgos");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("giannis");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    a = bf->check("kostas");
+    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+
+    socket->writeBloomFilterInChunks(bf);
+
     socket->closeSocket();
 
     return 0;
