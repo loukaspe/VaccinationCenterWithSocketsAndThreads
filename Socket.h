@@ -34,10 +34,12 @@ public:
     void connectToSocket();
     int readNumber();
     void writeNumber(int);
-    void writeStringInChunks(char*);
     char* readStringInChunks(int);
+    void writeStringInChunks(char*);
     int* readArrayOfInts(int);
     void writeArrayOfInts(int*, int);
+    BitArray* readBitArrayInChunks();
+    void writeBitArrayInChunks(BitArray*);
     void closeSocket();
 };
 

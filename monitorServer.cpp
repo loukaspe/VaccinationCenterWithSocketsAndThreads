@@ -75,17 +75,24 @@ int main(int argc, char **argv) {
     char* test = "this is a huge string, like my .. hmmm lets get serious this is a very big string end.";
     int testLength = strlen(test) + 1;
 
+    // Number, String, Number
     socket->writeNumber(testLength);
     socket->writeStringInChunks(test);
     socket->writeNumber(5);
 
-    int numberOfElements = 100;
+    // Array Of Ints
+    int numberOfElements = 819200;
     int array[numberOfElements];
     for(int i = 0; i < numberOfElements; i++) {
         array[i] = i;
     }
     socket->writeNumber(numberOfElements);
     socket->writeArrayOfInts(array, numberOfElements);
+
+    // BitArray
+    BitArray *bitArray = new BitArray(numberOfElements);
+    bitArray->setBitArray(array);
+    socket->writeBitArrayInChunks(bitArray);
 
     socket->closeSocket();
 

@@ -184,6 +184,81 @@ void Socket::writeArrayOfInts(int* array, int numberOfElements) {
     }
 }
 
+
+void Socket::writeBitArrayInChunks(BitArray* bitArray) {
+    /* BitArray is an array of ints. So we firstly pass the array in order to set him
+     * to the read bitArray */
+    this->writeNumber(bitArray->getNumberOfBitArrayInts());
+    this->writeArrayOfInts(bitArray->getBitArray(), bitArray->getNumberOfBitArrayInts());
+
+    int totalBytes = sizeof(BitArray);
+
+    int writtenBytes = 0;
+    int chunk;
+
+    if(totalBytes < this->bufferSize) {
+        if (::write(createdSocketFd, bitArray, totalBytes) < 0) {
+            Helper::handleError(WRITE_ERROR, errno + 4);
+        }
+
+        return;
+    }
+
+    while(writtenBytes < totalBytes) {
+        chunk = ::write(createdSocketFd, bitArray, this->bufferSize);
+        if (chunk < 0) {
+            Helper::handleError(WRITE_ERROR, errno + 5);
+        }
+
+        // We move the string pointer chunk chars ahead to continue the writing
+        // from the point is was stopped
+        bitArray += chunk;
+        writtenBytes += chunk;
+    }
+}
+
+BitArray* Socket::readBitArrayInChunks() {
+    /* BitArray is an array of ints. So we firstly read the array in order to set him
+     * to the read bitArray */
+    int numberOfBitArrayInts = this->readNumber();
+    int *intsOfBitArray = this->readArrayOfInts(numberOfBitArrayInts);
+
+    int bitArraySize = sizeof(BitArray);
+
+    BitArray* bitArray = (BitArray*) malloc(bitArraySize);
+    if (bitArray == NULL) {
+        Helper::handleError("Error: Could not allocate memory", errno);
+    }
+
+    if(bitArraySize <= this->bufferSize) {
+        if (::read(acceptedSocketFd, bitArray, bitArraySize) < 0) {
+            Helper::handleError(READ_ERROR, errno);
+        }
+
+        bitArray->setBitArray(intsOfBitArray);
+
+        return bitArray;
+    }
+
+    char rawBytes[this->bufferSize];
+    int readBytes = 0;
+    int chunk;
+
+    while(readBytes < bitArraySize) {
+        chunk = ::read(acceptedSocketFd, rawBytes, this->bufferSize);
+        if (chunk < 0) {
+            Helper::handleError(READ_ERROR, errno);
+        }
+
+        memcpy(bitArray + readBytes, rawBytes, chunk);
+        readBytes += chunk;
+    }
+
+    bitArray->setBitArray(intsOfBitArray);
+
+    return bitArray;
+}
+
 void Socket::closeSocket() {
     close(createdSocketFd);
     close(acceptedSocketFd);

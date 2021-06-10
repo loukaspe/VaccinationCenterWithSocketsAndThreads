@@ -170,12 +170,17 @@ void TravelMonitorClient::readDataFromMonitors() {
                      * TESTS FOR SOCKETS
                      ************************************/
 
+                    // Number, String, Number
                     int testLength = this->sockets[i]->readNumber();
                     cout << this->sockets[i]->readStringInChunks(testLength) << endl;
                     cout << this->sockets[i]->readNumber() << endl;
 
+                    // Array Of Ints
                     int sizeOfArray = sockets[i]->readNumber();
                     int* array = sockets[i]->readArrayOfInts(sizeOfArray);
+
+                    // BitArray
+                    BitArray *bitArray = sockets[i]->readBitArrayInChunks();
 
                     sockets[i]->closeSocket();
                     pollFds[i].events = 0;
