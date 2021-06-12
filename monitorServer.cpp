@@ -9,9 +9,9 @@ const char *PROGRAM_OPTIONS = "p:t:b:c:s:";
 const char *WRONG_PROGRAM_USAGE_ERROR = "Usage %s -p [port] -b [socketBufferSize] "
                                         "-c [socketBufferSize]  -s [sizeOfBloom] -t [numberOfThreads]\n";
 
-char **getCountiesNamesFromCommandLineArguments(int, char **, int);
-int getTotalFilesNumber(int, char**, int, char*);
-char** getFilesNames(int, char**, int, char*, int);
+char **getCountiesNamesFromLastCommandLineArguments(int, char **, int);
+int getTotalFilePathsNumber(int, char**, int, char*);
+char** getFilePathsNames(int, char**, int, char*, int);
 void *threadReadFilesAndUpdateStructures(void*);
 
 int cyclicBufferSize;
@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     // (for example -b bufferSize) - 1 (the program name)
     int numberOfCountryNames = argc - NUMBER_OF_OPTIONS_ARGUMENTS - 1;
 
-    char **countryNames = getCountiesNamesFromCommandLineArguments(numberOfCountryNames, argv, argc);
+    char **countryNames = getCountiesNamesFromLastCommandLineArguments(numberOfCountryNames, argv, argc);
 
 //    for (int i = 0; i < argc; i++) {
 //        cout << argv[i] << endl;
@@ -105,21 +105,21 @@ int main(int argc, char **argv) {
     inputDirectory = socket->readStringInChunks(inputDirectoryStringLength);
 //    cout << inputDirectory << endl;
 
-    totalNumberOfFiles = getTotalFilesNumber(
-        numberOfCountryNames,
-        countryNames,
-        inputDirectoryStringLength,
-        inputDirectory
+    totalNumberOfFiles = getTotalFilePathsNumber(
+            numberOfCountryNames,
+            countryNames,
+            inputDirectoryStringLength,
+            inputDirectory
     );
 
 //    cout << "T " << totalNumberOfFiles << endl;
 
-    filesNames = getFilesNames(
-        numberOfCountryNames,
-        countryNames,
-        inputDirectoryStringLength,
-        inputDirectory,
-        totalNumberOfFiles
+    filesNames = getFilePathsNames(
+            numberOfCountryNames,
+            countryNames,
+            inputDirectoryStringLength,
+            inputDirectory,
+            totalNumberOfFiles
     );
 
     pthread_t thread[numberOfThreads];
@@ -227,7 +227,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-char **getCountiesNamesFromCommandLineArguments(int numberOfPaths, char **argv, int argc) {
+char **getCountiesNamesFromLastCommandLineArguments(int numberOfPaths, char **argv, int argc) {
     char **countryNames = (char **) malloc(numberOfPaths * sizeof(char *));
     for (int i = numberOfPaths - 1; i >= 0; i--) {
         countryNames[i] = argv[argc - 1 - i];
@@ -236,7 +236,7 @@ char **getCountiesNamesFromCommandLineArguments(int numberOfPaths, char **argv, 
     return countryNames;
 }
 
-int getTotalFilesNumber(
+int getTotalFilePathsNumber(
     int numberOfCountries,
     char** countryNames,
     int inputDirectoryStringLength,
@@ -267,7 +267,7 @@ int getTotalFilesNumber(
     return totalNumberOfFiles;
 }
 
-char **getFilesNames(
+char **getFilePathsNames(
     int numberOfCountries,
     char** countryNames,
     int inputDirectoryStringLength,
