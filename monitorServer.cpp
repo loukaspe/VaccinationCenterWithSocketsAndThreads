@@ -12,12 +12,23 @@ const char *WRONG_PROGRAM_USAGE_ERROR = "Usage %s -p [port] -b [socketBufferSize
 char **getCountiesNamesFromCommandLineArguments(int, char **, int);
 int getTotalFilesNumber(int, char**, int, char*);
 char** getFilesNames(int, char**, int, char*, int);
+void *threadReadFilesAndUpdateStructures(void*);
+
+int cyclicBufferSize;
+int numberOfFilesMovedToBuffer;
+int numberOfReadFiles;
+int totalNumberOfFiles;
+int nextPositionOfBufferToBeRead = 0;
+char** cyclicBuffer;
+char** filesNames;
+
+pthread_mutex_t readLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t updateLock = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char **argv) {
     int opt;
     int port;
     int socketBufferSize;
-    int cyclicBufferSize;
     int bloomSizeInKiloBytes;
     char *inputDirectory;
     int numberOfThreads;
@@ -73,7 +84,7 @@ int main(int argc, char **argv) {
     inputDirectory = socket->readStringInChunks(inputDirectoryStringLength);
 //    cout << inputDirectory << endl;
 
-    int totalNumberOfFiles = getTotalFilesNumber(
+    totalNumberOfFiles = getTotalFilesNumber(
         numberOfCountryNames,
         countryNames,
         inputDirectoryStringLength,
@@ -82,7 +93,7 @@ int main(int argc, char **argv) {
 
 //    cout << "T " << totalNumberOfFiles << endl;
 
-    char** filesNames = getFilesNames(
+    filesNames = getFilesNames(
         numberOfCountryNames,
         countryNames,
         inputDirectoryStringLength,
@@ -90,9 +101,27 @@ int main(int argc, char **argv) {
         totalNumberOfFiles
     );
 
-//    for(int k = 0; k < totalNumberOfFiles; k++) {
-//        cout << filesNames[k] << endl;
-//    }
+    pthread_t thread[numberOfThreads];
+    cyclicBuffer = (char**) malloc(cyclicBufferSize * sizeof(char*));;
+    numberOfFilesMovedToBuffer = 0;
+    numberOfReadFiles = 0;
+
+    for(int i = 0; i < cyclicBufferSize; i++) {
+        cyclicBuffer[i] = filesNames[i];
+        numberOfFilesMovedToBuffer++;
+    }
+
+    for(int i = 0; i < numberOfThreads; i++) {
+        pthread_create (
+            &thread[i],
+            NULL ,
+            threadReadFilesAndUpdateStructures,
+            (void*)cyclicBufferSize) ;
+    }
+
+    for(int i = 0; i < numberOfThreads; i++) {
+        pthread_join(thread[i], NULL);
+    }
 
     /*
      *
@@ -237,4 +266,39 @@ char **getFilesNames(
     }
 
     return filesNames;
+}
+
+
+void *threadReadFilesAndUpdateStructures(void* arg) {
+    while(true) {
+        if(numberOfReadFiles == totalNumberOfFiles) {
+            break;
+        }
+
+        /* Read filename from Cyclic Buffer */
+        pthread_mutex_lock(&readLock);
+        if(cyclicBuffer[nextPositionOfBufferToBeRead] != NULL) {
+            cout << cyclicBuffer[nextPositionOfBufferToBeRead] << " position " << nextPositionOfBufferToBeRead << " from thread " << pthread_self() << endl;
+            cyclicBuffer[nextPositionOfBufferToBeRead] = NULL;
+            nextPositionOfBufferToBeRead = (++nextPositionOfBufferToBeRead)%cyclicBufferSize;
+            numberOfReadFiles++;
+        }
+        pthread_mutex_unlock(&readLock);
+
+        if(numberOfFilesMovedToBuffer == totalNumberOfFiles) {
+            continue;
+        }
+
+        //Fill Cyclic Buffer's empty positions
+        pthread_mutex_lock(&updateLock);
+        for(int i = 0; i < cyclicBufferSize; i++) {
+            if(cyclicBuffer[i] == NULL && numberOfFilesMovedToBuffer < totalNumberOfFiles) {
+                cyclicBuffer[i] = Helper::copyString(filesNames[numberOfFilesMovedToBuffer]);
+                numberOfFilesMovedToBuffer++;
+            }
+        }
+        pthread_mutex_unlock(&updateLock);
+    }
+
+    return NULL;
 }
