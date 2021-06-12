@@ -9,7 +9,7 @@ const char *PROGRAM_OPTIONS = "p:t:b:c:s:";
 const char *WRONG_PROGRAM_USAGE_ERROR = "Usage %s -p [port] -b [socketBufferSize] "
                                         "-c [socketBufferSize]  -s [sizeOfBloom] -t [numberOfThreads]\n";
 
-char **getPathsNameFromCommandLineArguments(int, char **, int);
+char **getCountiesNamesFromCommandLineArguments(int, char **, int);
 
 int main(int argc, char **argv) {
     int opt;
@@ -26,9 +26,9 @@ int main(int argc, char **argv) {
 
     // Number of paths given to the monitor server is equal to the argc - numberOfOptionArguments
     // (for example -b bufferSize) - 1 (the program name)
-    int numberOfPaths = argc - NUMBER_OF_OPTIONS_ARGUMENTS - 1;
+    int numberOfCountryNames = argc - NUMBER_OF_OPTIONS_ARGUMENTS - 1;
 
-    char **paths = getPathsNameFromCommandLineArguments(numberOfPaths, argv, argc);
+    char **countryNames = getCountiesNamesFromCommandLineArguments(numberOfCountryNames, argv, argc);
 
 //    for (int i = 0; i < argc; i++) {
 //        cout << argv[i] << endl;
@@ -157,11 +157,11 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-char **getPathsNameFromCommandLineArguments(int numberOfPaths, char **argv, int argc) {
-    char **paths = (char **) malloc(numberOfPaths * sizeof(char *));
+char **getCountiesNamesFromCommandLineArguments(int numberOfPaths, char **argv, int argc) {
+    char **countryNames = (char **) malloc(numberOfPaths * sizeof(char *));
     for (int i = numberOfPaths - 1; i >= 0; i--) {
-        paths[i] = argv[argc - 1 - i];
+        countryNames[i] = argv[argc - 1 - i];
     }
 
-    return paths;
+    return countryNames;
 }
