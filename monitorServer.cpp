@@ -18,7 +18,9 @@ int cyclicBufferSize;
 int numberOfFilesMovedToBuffer;
 int numberOfReadFiles;
 int totalNumberOfFiles;
+int numberOfThreads;
 int nextPositionOfBufferToBeRead = 0;
+int numberOfThreadFinishedReadingFiles = 0;
 char** cyclicBuffer;
 char** filesNames;
 PersonLinkedList *people;
@@ -38,7 +40,7 @@ int main(int argc, char **argv) {
     int socketBufferSize;
     int bloomSizeInKiloBytes;
     char *inputDirectory;
-    int numberOfThreads;
+    numberOfThreads;
 
     // Host declaration (static declaration of hostname with large size)
     struct hostent *host;
@@ -177,25 +179,25 @@ int main(int argc, char **argv) {
 //        current = current->next;
 //    }
 
-    /* Waiting on threads to finish reading from input files in order to send data */
-    for(int i = 0; i < numberOfThreads; i++) {
-        if((
-            error = pthread_mutex_lock(&mainThreadWaitToSendBloomFiltersLock)
-        )) {
-            Helper::handleError("Error: main thread waiting to send mutex lock", error);
-        }
+    if((
+        error = pthread_mutex_lock(&mainThreadWaitToSendBloomFiltersLock)
+    )) {
+        Helper::handleError("Error: main thread waiting to send mutex lock", error);
+    }
 
+    /* Waiting on threads to finish reading from input files in order to send data */
+    while(numberOfThreadFinishedReadingFiles < numberOfThreads) {
         pthread_cond_wait (
             &mainThreadWaitToSendBloomFiltersConditionVariable,
             &mainThreadWaitToSendBloomFiltersLock
         );
-        cout << "Waited on " << i << endl;
+        cout << "Waited on " << numberOfThreadFinishedReadingFiles << endl;
+    }
 
-        if((
-            error = pthread_mutex_unlock(&mainThreadWaitToSendBloomFiltersLock)
-        )) {
-            Helper::handleError("Error: main thread waiting to send mutex lock", error);
-        }
+    if((
+        error = pthread_mutex_unlock(&mainThreadWaitToSendBloomFiltersLock)
+    )) {
+        Helper::handleError("Error: main thread waiting to send mutex lock", error);
     }
 
     cout << "Send data" << endl;
@@ -382,10 +384,13 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
     }
 
     cout << "Finished reading data" << endl;
+    numberOfThreadFinishedReadingFiles++;
 
-    pthread_cond_signal(
-        &mainThreadWaitToSendBloomFiltersConditionVariable
-    );
+    if(numberOfThreadFinishedReadingFiles == numberOfThreads) {
+        pthread_cond_signal(
+            &mainThreadWaitToSendBloomFiltersConditionVariable
+        );
+    }
 
     if((
         error = pthread_mutex_unlock(&mainThreadWaitToSendBloomFiltersLock)
