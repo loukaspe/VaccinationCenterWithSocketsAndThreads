@@ -10,6 +10,8 @@ const char *WRONG_PROGRAM_USAGE_ERROR = "Usage %s -p [port] -b [socketBufferSize
                                         "-c [socketBufferSize]  -s [sizeOfBloom] -t [numberOfThreads]\n";
 
 char **getCountiesNamesFromCommandLineArguments(int, char **, int);
+int getTotalFilesNumber(int, char**, int, char*);
+char** getFilesNames(int, char**, int, char*, int);
 
 int main(int argc, char **argv) {
     int opt;
@@ -69,8 +71,28 @@ int main(int argc, char **argv) {
 
     int inputDirectoryStringLength = socket->readNumber();
     inputDirectory = socket->readStringInChunks(inputDirectoryStringLength);
-    cout << inputDirectory << endl;
+//    cout << inputDirectory << endl;
 
+    int totalNumberOfFiles = getTotalFilesNumber(
+        numberOfCountryNames,
+        countryNames,
+        inputDirectoryStringLength,
+        inputDirectory
+    );
+
+//    cout << "T " << totalNumberOfFiles << endl;
+
+    char** filesNames = getFilesNames(
+        numberOfCountryNames,
+        countryNames,
+        inputDirectoryStringLength,
+        inputDirectory,
+        totalNumberOfFiles
+    );
+
+//    for(int k = 0; k < totalNumberOfFiles; k++) {
+//        cout << filesNames[k] << endl;
+//    }
 
     /*
      *
@@ -95,45 +117,12 @@ int main(int argc, char **argv) {
         vaccinationCenter,
         fileReader
     );
+    */
 
-    char* directoryCharacter = "/";
-    int directoryCharacterSize = strlen(directoryCharacter);
-
-    for(int i = 0; i < expectedCountryNames; i++) {
-        // We build the path for reading the files with the records
-        int countryNameSize = strlen(countriesSubdirectories[i]);
-        char *path = (char*) malloc(
-            inputDirectorySize + countryNameSize + directoryCharacterSize + 1
-        );
-        strcpy(path, inputDirectory);
-        strcat(path, directoryCharacter);
-        strcat(path, countriesSubdirectories[i]);
-
-        int numberOfFiles = Helper::getAllFilesNumber(path);
-        char** countriesFile = Helper::getAllFilesNames(path);
-
-        delete path;
-        for(int j = 0; j < numberOfFiles; j++) {
-            // We build the path for each records' file
-            int inputFileSize = strlen(countriesFile[j]);
-            path = (char*) malloc(
-                    inputDirectorySize
-                    + countryNameSize
-                    + 2 * directoryCharacterSize
-                    + inputFileSize
-                    + 1
-            );
-            strcpy(path, inputDirectory);
-            strcat(path, directoryCharacter);
-            strcat(path, countriesSubdirectories[i]);
-            strcat(path, directoryCharacter);
-            strcat(path, countriesFile[j]);
-
-            fileReader->readAndUpdateStructures(path);
-            delete path;
-        }
-    }
-
+    /*
+     * SEND FILES
+     *
+     *
     // Every Virus in the Monitor has one BloomFilter. So the Monitor will send
     // to the TravelMonitor numberOfViruses BloomFilters.
     int numberOfViruses = viruses->getSize();
@@ -151,9 +140,8 @@ int main(int argc, char **argv) {
         pipeWriter->writeBloomFilterInChunks(temp);
         current = current->next;
     }
-
-*/
-
+     *
+     */
     socket->closeSocket();
 
     return 0;
@@ -166,4 +154,89 @@ char **getCountiesNamesFromCommandLineArguments(int numberOfPaths, char **argv, 
     }
 
     return countryNames;
+}
+
+int getTotalFilesNumber(
+    int numberOfCountries,
+    char** countryNames,
+    int inputDirectoryStringLength,
+    char* inputDirectory
+) {
+    int totalNumberOfFiles = 0;
+
+    char* directoryCharacter = "/";
+    int directoryCharacterSize = strlen(directoryCharacter);
+
+    for(int i = 0; i < numberOfCountries; i++) {
+        // We build the path for reading the files with the records
+        int countryNameSize = strlen(countryNames[i]);
+        char *path = (char*) malloc(
+                inputDirectoryStringLength + countryNameSize + directoryCharacterSize + 1
+        );
+        strcpy(path, inputDirectory);
+        strcat(path, directoryCharacter);
+        strcat(path, countryNames[i]);
+
+        int numberOfFiles = Helper::getAllFilesNumber(path);
+
+        totalNumberOfFiles += numberOfFiles;
+
+        delete path;
+    }
+
+    return totalNumberOfFiles;
+}
+
+char **getFilesNames(
+    int numberOfCountries,
+    char** countryNames,
+    int inputDirectoryStringLength,
+    char* inputDirectory,
+    int totalNumberOfFiles
+) {
+    char** filesNames = (char**) malloc(totalNumberOfFiles * sizeof(char*));
+    // Temp variable for keeping index in the double for loop for the filesNames
+    // array
+    int k = 0;
+
+    char* directoryCharacter = "/";
+    int directoryCharacterSize = strlen(directoryCharacter);
+
+    for(int i = 0; i < numberOfCountries; i++) {
+        // We build the path for reading the files with the records
+        int countryNameSize = strlen(countryNames[i]);
+        char *path = (char*) malloc(
+                inputDirectoryStringLength + countryNameSize + directoryCharacterSize + 1
+        );
+        strcpy(path, inputDirectory);
+        strcat(path, directoryCharacter);
+        strcat(path, countryNames[i]);
+
+        int numberOfFiles = Helper::getAllFilesNumber(path);
+        char** countriesFile = Helper::getAllFilesNames(path);
+
+        delete path;
+        for(int j = 0; j < numberOfFiles; j++) {
+            // We build the path for each records' file
+            int inputFileSize = strlen(countriesFile[j]);
+            path = (char*) malloc(
+                    inputDirectoryStringLength
+                    + countryNameSize
+                    + 2 * directoryCharacterSize
+                    + inputFileSize
+                    + 1
+            );
+            strcpy(path, inputDirectory);
+            strcat(path, directoryCharacter);
+            strcat(path, countryNames[i]);
+            strcat(path, directoryCharacter);
+            strcat(path, countriesFile[j]);
+
+            filesNames[k] = Helper::copyString(path);
+            k++;
+            delete path;
+        }
+    }
+
+    return filesNames;
 }
