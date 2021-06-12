@@ -41,22 +41,22 @@ void CitizenRecordsFileReader::readAndUpdateStructures(char* filename) {
     // data is given
     while (getline(&line, &length, inputFile) != -1) {
         temp = strtok(line, SPACE_DELIMITER);
-        citizenId = Helper::copyString(temp);
+        citizenId = temp;
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        firstName = Helper::copyString(temp);
+        firstName = temp;
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        lastName = Helper::copyString(temp);
+        lastName = temp;
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        country = Helper::copyString(temp);
+        country = temp;
 
         temp = strtok(NULL, SPACE_DELIMITER);
         age = atoi(temp);
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        virusName = Helper::copyString(temp);
+        virusName = temp;
 
         temp = strtok(NULL, SPACE_DELIMITER);
         temp = Helper::removeNewLineCharacterFromString(temp);

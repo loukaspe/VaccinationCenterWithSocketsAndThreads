@@ -295,7 +295,7 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
         pthread_mutex_lock(&updateCyclicBufferLock);
         for(int i = 0; i < cyclicBufferSize; i++) {
             if(cyclicBuffer[i] == NULL && numberOfFilesMovedToBuffer < totalNumberOfFiles) {
-                cyclicBuffer[i] = Helper::copyString(filesNames[numberOfFilesMovedToBuffer]);
+                cyclicBuffer[i] = filesNames[numberOfFilesMovedToBuffer];
                 numberOfFilesMovedToBuffer++;
             }
         }
