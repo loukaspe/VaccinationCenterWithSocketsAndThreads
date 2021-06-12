@@ -124,6 +124,7 @@ int main(int argc, char **argv) {
     cyclicBuffer = (char**) malloc(cyclicBufferSize * sizeof(char*));;
     numberOfFilesMovedToBuffer = 0;
     numberOfReadFiles = 0;
+    int error;
 
     for(int i = 0; i < cyclicBufferSize; i++) {
         cyclicBuffer[i] = filesNames[i];
@@ -131,15 +132,16 @@ int main(int argc, char **argv) {
     }
 
     for(int i = 0; i < numberOfThreads; i++) {
-        pthread_create (
-            &thread[i],
-            NULL ,
-            threadReadFilesAndUpdateStructures,
-            (void*)cyclicBufferSize) ;
-    }
-
-    for(int i = 0; i < numberOfThreads; i++) {
-        pthread_join(thread[i], NULL);
+        if((
+            error = pthread_create (
+                &thread[i],
+                NULL ,
+                threadReadFilesAndUpdateStructures,
+                (void*)cyclicBufferSize
+            )
+        )) {
+             Helper::handleError("Error: pthread_create()", error);
+        }
     }
 
 //    MonitorServer* monitor = new MonitorServer(
@@ -173,7 +175,22 @@ int main(int argc, char **argv) {
 //    }
 
     socket->closeSocket();
+    for(int i = 0; i < numberOfThreads; i++) {
+        if(
+            (error = pthread_join(thread[i], NULL))
+        ) {
+            Helper::handleError("Error: pthread_join()", error);
+        }
+    }
 
+    if (
+        (error = pthread_mutex_destroy(&readFromCyclicBufferLock))
+        || (error = pthread_mutex_destroy(&updateCyclicBufferLock))
+    ) {
+        Helper::handleError("Error: mutex_destroy()", error);
+    }
+
+//    pthread_exit ( NULL ) ;
     return 0;
 }
 
@@ -271,13 +288,19 @@ char **getFilesNames(
 
 
 void *threadReadFilesAndUpdateStructures(void* arg) {
+    int error;
     while(true) {
         if(numberOfReadFiles == totalNumberOfFiles) {
             break;
         }
 
         /* Read filename from Cyclic Buffer */
-        pthread_mutex_lock(&readFromCyclicBufferLock);
+        if((
+            error = pthread_mutex_lock(&readFromCyclicBufferLock)
+        )) {
+            Helper::handleError("Error: read mutex lock", error);
+        }
+
         if(cyclicBuffer[nextPositionOfBufferToBeRead] != NULL) {
             cout << "Read " << cyclicBuffer[nextPositionOfBufferToBeRead] << " position " << nextPositionOfBufferToBeRead << " from thread " << pthread_self() << endl;
             fileReader->readAndUpdateStructures(cyclicBuffer[nextPositionOfBufferToBeRead]);
@@ -285,22 +308,37 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
             nextPositionOfBufferToBeRead = (++nextPositionOfBufferToBeRead)%cyclicBufferSize;
             numberOfReadFiles++;
         }
-        pthread_mutex_unlock(&readFromCyclicBufferLock);
+
+        if((
+            error = pthread_mutex_unlock(&readFromCyclicBufferLock)
+        )) {
+            Helper::handleError("Error: read mutex unlock", error);
+        }
 
         if(numberOfFilesMovedToBuffer == totalNumberOfFiles) {
             continue;
         }
 
+        if((
+            error = pthread_mutex_lock(&updateCyclicBufferLock)
+        )) {
+            Helper::handleError("Error: update mutex lock", error);
+        }
+
         //Fill Cyclic Buffer's empty positions
-        pthread_mutex_lock(&updateCyclicBufferLock);
         for(int i = 0; i < cyclicBufferSize; i++) {
             if(cyclicBuffer[i] == NULL && numberOfFilesMovedToBuffer < totalNumberOfFiles) {
                 cyclicBuffer[i] = filesNames[numberOfFilesMovedToBuffer];
                 numberOfFilesMovedToBuffer++;
             }
         }
-        pthread_mutex_unlock(&updateCyclicBufferLock);
+
+        if((
+            error = pthread_mutex_unlock(&updateCyclicBufferLock)
+        )) {
+            Helper::handleError("Error: update mutex unlock", error);
+        }
     }
 
-    return NULL;
+    pthread_exit (NULL) ;
 }
