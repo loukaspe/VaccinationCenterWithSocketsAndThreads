@@ -166,45 +166,7 @@ void TravelMonitorClient::readDataFromMonitors() {
             if (pollFds[i].revents & POLLIN) {
                 if (pollFds[i].fd == this->acceptedSocketFds[i]) {
 
-                    /************************************
-                     * TESTS FOR SOCKETS
-                     ************************************/
-
-                    // Number, String, Number
-                    int testLength = this->sockets[i]->readNumber();
-                    cout << this->sockets[i]->readStringInChunks(testLength) << endl;
-                    cout << this->sockets[i]->readNumber() << endl;
-
-                    // Array Of Ints
-                    int sizeOfArray = sockets[i]->readNumber();
-                    int* array = sockets[i]->readArrayOfInts(sizeOfArray);
-
-                    // BitArray
-                    BitArray *bitArray = sockets[i]->readBitArrayInChunks();
-
-                    // Bloom Filter
-                    BloomFilter* bf = sockets[i]->readBloomFilterInChunks();
-
-                    bool a = bf->check("loukas1");
-                    cout << "T:" << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("loukas2");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("loukas3");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("loukas4");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("loukas5");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("loukas6");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("loukas7");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("giorgos");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("giannis");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
-                    a = bf->check("kostas");
-                    cout << "T:"  << (a?"MAYBE":"NO") << endl;
+                    /* EXPECT BLOOM FILTERS */
 
                     sockets[i]->closeSocket();
                     pollFds[i].events = 0;

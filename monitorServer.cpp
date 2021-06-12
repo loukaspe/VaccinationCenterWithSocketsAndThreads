@@ -68,65 +68,89 @@ int main(int argc, char **argv) {
     socket->createSocket(host);
     socket->connectToSocket();
 
-    /************************************
-     * TESTS FOR SOCKETS
-     ************************************/
 
-    char* test = "this is a huge string, like my .. hmmm lets get serious this is a very big string end.";
-    int testLength = strlen(test) + 1;
 
-    // Number, String, Number
-    socket->writeNumber(testLength);
-    socket->writeStringInChunks(test);
-    socket->writeNumber(5);
+    /*
+     *
+    PersonLinkedList *people = new PersonLinkedList();
+    VirusLinkedList *viruses = new VirusLinkedList();
+    CountryLinkedList *countries = new CountryLinkedList();
 
-    // Array Of Ints
-    int numberOfElements = 819200;
-    int array[numberOfElements];
-    for(int i = 0; i < numberOfElements; i++) {
-        array[i] = i;
+    VaccinationCenter *vaccinationCenter = new VaccinationCenter(
+            people,
+            viruses,
+            countries
+    );
+
+    CitizenRecordsFileReader *fileReader = new CitizenRecordsFileReader(
+            vaccinationCenter
+    );
+
+    Monitor* monitor = new Monitor(
+        people,
+        viruses,
+        countries,
+        vaccinationCenter,
+        fileReader
+    );
+
+    char* directoryCharacter = "/";
+    int directoryCharacterSize = strlen(directoryCharacter);
+
+    for(int i = 0; i < expectedCountryNames; i++) {
+        // We build the path for reading the files with the records
+        int countryNameSize = strlen(countriesSubdirectories[i]);
+        char *path = (char*) malloc(
+            inputDirectorySize + countryNameSize + directoryCharacterSize + 1
+        );
+        strcpy(path, inputDirectory);
+        strcat(path, directoryCharacter);
+        strcat(path, countriesSubdirectories[i]);
+
+        int numberOfFiles = Helper::getAllFilesNumber(path);
+        char** countriesFile = Helper::getAllFilesNames(path);
+
+        delete path;
+        for(int j = 0; j < numberOfFiles; j++) {
+            // We build the path for each records' file
+            int inputFileSize = strlen(countriesFile[j]);
+            path = (char*) malloc(
+                    inputDirectorySize
+                    + countryNameSize
+                    + 2 * directoryCharacterSize
+                    + inputFileSize
+                    + 1
+            );
+            strcpy(path, inputDirectory);
+            strcat(path, directoryCharacter);
+            strcat(path, countriesSubdirectories[i]);
+            strcat(path, directoryCharacter);
+            strcat(path, countriesFile[j]);
+
+            fileReader->readAndUpdateStructures(path);
+            delete path;
+        }
     }
-    socket->writeNumber(numberOfElements);
-    socket->writeArrayOfInts(array, numberOfElements);
 
-    // BitArray
-    BitArray *bitArray = new BitArray(numberOfElements);
-    bitArray->setBitArray(array);
-    socket->writeBitArrayInChunks(bitArray);
+    // Every Virus in the Monitor has one BloomFilter. So the Monitor will send
+    // to the TravelMonitor numberOfViruses BloomFilters.
+    int numberOfViruses = viruses->getSize();
+    int numberOfBloomFiltersSent = numberOfViruses;
 
-    // BloomFilter
-    BloomFilter* bf = new BloomFilter();
-    bf->setCountryName("countryCountryCountryCountry");
-    bf->setVirusName("virusVirusVirusVirus");
-    bf->add("loukas1");
-    bf->add("loukas2");
-    bf->add("loukas3");
-    bf->add("loukas4");
-    bf->add("loukas5");
-    bf->add("loukas6");
-    bf->add("loukas7");
-    bool a = bf->check("loukas1");
-    cout << "\tM:" << (a?"MAYBE":"NO") << endl;
-    a = bf->check("loukas2");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("loukas3");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("loukas4");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("loukas5");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("loukas6");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("loukas7");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("giorgos");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("giannis");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
-    a = bf->check("kostas");
-    cout << "\tM:"  << (a?"MAYBE":"NO") << endl;
+    pipeWriter->openPipe();
 
-    socket->writeBloomFilterInChunks(bf);
+    // Send through pipes the number of expected bloom filters
+    pipeWriter->writeNumber(numberOfBloomFiltersSent);
+
+    VirusLinkedListNode *current = viruses->getHead();
+    while(current != NULL) {
+        // Send through pipes the bloom filters of the Monitor
+        BloomFilter* temp = current->getVirus()->getVaccinatedPeopleBloomFilter();
+        pipeWriter->writeBloomFilterInChunks(temp);
+        current = current->next;
+    }
+
+*/
 
     socket->closeSocket();
 
