@@ -219,22 +219,20 @@ char **getFilesNames(
         for(int j = 0; j < numberOfFiles; j++) {
             // We build the path for each records' file
             int inputFileSize = strlen(countriesFile[j]);
-            path = (char*) malloc(
+            filesNames[k] = (char*) malloc(
                     inputDirectoryStringLength
                     + countryNameSize
                     + 2 * directoryCharacterSize
                     + inputFileSize
                     + 1
             );
-            strcpy(path, inputDirectory);
-            strcat(path, directoryCharacter);
-            strcat(path, countryNames[i]);
-            strcat(path, directoryCharacter);
-            strcat(path, countriesFile[j]);
+            strcpy(filesNames[k], inputDirectory);
+            strcat(filesNames[k], directoryCharacter);
+            strcat(filesNames[k], countryNames[i]);
+            strcat(filesNames[k], directoryCharacter);
+            strcat(filesNames[k], countriesFile[j]);
 
-            filesNames[k] = Helper::copyString(path);
             k++;
-            delete path;
         }
     }
 
