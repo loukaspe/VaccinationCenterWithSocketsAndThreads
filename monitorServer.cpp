@@ -21,6 +21,11 @@ int totalNumberOfFiles;
 int nextPositionOfBufferToBeRead = 0;
 char** cyclicBuffer;
 char** filesNames;
+PersonLinkedList *people;
+VirusLinkedList *viruses;
+CountryLinkedList *countries;
+VaccinationCenter *vaccinationCenter;
+CitizenRecordsFileReader *fileReader;
 
 pthread_mutex_t readLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t updateLock = PTHREAD_MUTEX_INITIALIZER;
@@ -68,6 +73,20 @@ int main(int argc, char **argv) {
                 Helper::handleError(WRONG_PROGRAM_USAGE_ERROR);
         }
     }
+
+    people = new PersonLinkedList();
+    viruses = new VirusLinkedList();
+    countries = new CountryLinkedList();
+
+    vaccinationCenter = new VaccinationCenter(
+            people,
+            viruses,
+            countries
+    );
+
+    fileReader = new CitizenRecordsFileReader(
+            vaccinationCenter
+    );
 
     Socket *socket = new Socket(socketBufferSize, port);
 
@@ -123,54 +142,36 @@ int main(int argc, char **argv) {
         pthread_join(thread[i], NULL);
     }
 
-    /*
-     *
-    PersonLinkedList *people = new PersonLinkedList();
-    VirusLinkedList *viruses = new VirusLinkedList();
-    CountryLinkedList *countries = new CountryLinkedList();
+//    MonitorServer* monitor = new MonitorServer(
+//        people,
+//        viruses,
+//        countries,
+//        vaccinationCenter,
+//        fileReader
+//    );
+//
+//    /*
+//     * SEND FILES
+//     *
+//     */
+//    // Every Virus in the Monitor has one BloomFilter. So the Monitor will send
+//    // to the TravelMonitor numberOfViruses BloomFilters.
+//    int numberOfViruses = viruses->getSize();
+//    int numberOfBloomFiltersSent = numberOfViruses;
+//
+//    pipeWriter->openPipe();
+//
+//    // Send through pipes the number of expected bloom filters
+//    pipeWriter->writeNumber(numberOfBloomFiltersSent);
+//
+//    VirusLinkedListNode *current = viruses->getHead();
+//    while(current != NULL) {
+//        // Send through pipes the bloom filters of the Monitor
+//        BloomFilter* temp = current->getVirus()->getVaccinatedPeopleBloomFilter();
+//        pipeWriter->writeBloomFilterInChunks(temp);
+//        current = current->next;
+//    }
 
-    VaccinationCenter *vaccinationCenter = new VaccinationCenter(
-            people,
-            viruses,
-            countries
-    );
-
-    CitizenRecordsFileReader *fileReader = new CitizenRecordsFileReader(
-            vaccinationCenter
-    );
-
-    Monitor* monitor = new Monitor(
-        people,
-        viruses,
-        countries,
-        vaccinationCenter,
-        fileReader
-    );
-    */
-
-    /*
-     * SEND FILES
-     *
-     *
-    // Every Virus in the Monitor has one BloomFilter. So the Monitor will send
-    // to the TravelMonitor numberOfViruses BloomFilters.
-    int numberOfViruses = viruses->getSize();
-    int numberOfBloomFiltersSent = numberOfViruses;
-
-    pipeWriter->openPipe();
-
-    // Send through pipes the number of expected bloom filters
-    pipeWriter->writeNumber(numberOfBloomFiltersSent);
-
-    VirusLinkedListNode *current = viruses->getHead();
-    while(current != NULL) {
-        // Send through pipes the bloom filters of the Monitor
-        BloomFilter* temp = current->getVirus()->getVaccinatedPeopleBloomFilter();
-        pipeWriter->writeBloomFilterInChunks(temp);
-        current = current->next;
-    }
-     *
-     */
     socket->closeSocket();
 
     return 0;
@@ -278,7 +279,8 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
         /* Read filename from Cyclic Buffer */
         pthread_mutex_lock(&readLock);
         if(cyclicBuffer[nextPositionOfBufferToBeRead] != NULL) {
-            cout << cyclicBuffer[nextPositionOfBufferToBeRead] << " position " << nextPositionOfBufferToBeRead << " from thread " << pthread_self() << endl;
+            cout << "Read " << cyclicBuffer[nextPositionOfBufferToBeRead] << " position " << nextPositionOfBufferToBeRead << " from thread " << pthread_self() << endl;
+            fileReader->readAndUpdateStructures(cyclicBuffer[nextPositionOfBufferToBeRead]);
             cyclicBuffer[nextPositionOfBufferToBeRead] = NULL;
             nextPositionOfBufferToBeRead = (++nextPositionOfBufferToBeRead)%cyclicBufferSize;
             numberOfReadFiles++;
