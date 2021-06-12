@@ -33,16 +33,16 @@ public:
     int listenToSocket();
     int acceptSocket();
     void connectToSocket();
-    int readNumber();
-    void writeNumber(int);
-    char* readStringInChunks(int);
-    void writeStringInChunks(char*);
-    int* readArrayOfInts(int);
-    void writeArrayOfInts(int*, int);
-    BloomFilter* readBloomFilterInChunks();
-    void writeBloomFilterInChunks(BloomFilter*);
-    BitArray* readBitArrayInChunks();
-    void writeBitArrayInChunks(BitArray*);
+    int readNumber(bool = false);
+    void writeNumber(int, bool = false);
+    char* readStringInChunks(int, bool = false);
+    void writeStringInChunks(char*, bool = false);
+    int* readArrayOfInts(int, bool = false);
+    void writeArrayOfInts(int*, int, bool = false);
+    BloomFilter* readBloomFilterInChunks(bool = false);
+    void writeBloomFilterInChunks(BloomFilter*, bool = false);
+    BitArray* readBitArrayInChunks(bool = false);
+    void writeBitArrayInChunks(BitArray*, bool = false);
     void closeSocket();
 };
 

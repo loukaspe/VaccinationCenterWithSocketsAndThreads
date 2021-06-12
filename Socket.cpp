@@ -86,27 +86,48 @@ void Socket::connectToSocket() {
     //    while (connectStatus < 0);
 }
 
-int Socket::readNumber() {
+int Socket::readNumber(bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+
     int number;
 
-    if(read(acceptedSocketFd, &number, sizeof(int)) < 0) {
+    if(read(fd, &number, sizeof(int)) < 0) {
         Helper::handleError(READ_ERROR, errno);
     }
 
     return number;
 }
 
-void Socket::writeNumber(int number) {
-    if (write(createdSocketFd, &number, sizeof(int)) < 0) {
+void Socket::writeNumber(int number, bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+
+    if (write(fd, &number, sizeof(int)) < 0) {
         Helper::handleError(WRITE_ERROR, errno);
     }
 }
 
-char *Socket::readStringInChunks(int totalBytes) {
+char *Socket::readStringInChunks(int totalBytes, bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+
     char string[totalBytes];
 
     if(totalBytes < this->bufferSize) {
-        if (::read(acceptedSocketFd, string, totalBytes) < 0) {
+        if (::read(fd, string, totalBytes) < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
 
@@ -118,7 +139,7 @@ char *Socket::readStringInChunks(int totalBytes) {
     int chunk;
 
     while(readBytes < totalBytes) {
-        chunk = ::read(acceptedSocketFd, rawBytes, this->bufferSize);
+        chunk = ::read(fd, rawBytes, this->bufferSize);
         rawBytes[this->bufferSize] = '\0';
         if (chunk < 0) {
             Helper::handleError(READ_ERROR, errno);
@@ -138,7 +159,14 @@ char *Socket::readStringInChunks(int totalBytes) {
 }
 
 
-void Socket::writeStringInChunks(char* string) {
+void Socket::writeStringInChunks(char* string, bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+    
     // Add one byte for the terminating character
     int totalBytes = strlen(string) + 1;
 
@@ -146,7 +174,7 @@ void Socket::writeStringInChunks(char* string) {
     int chunk;
 
     if(totalBytes < this->bufferSize) {
-        if (::write(createdSocketFd, string, totalBytes) < 0) {
+        if (::write(fd, string, totalBytes) < 0) {
             Helper::handleError(WRITE_ERROR, errno);
         }
 
@@ -154,7 +182,7 @@ void Socket::writeStringInChunks(char* string) {
     }
 
     while(writtenBytes < totalBytes) {
-        chunk = ::write(createdSocketFd, string, this->bufferSize);
+        chunk = ::write(fd, string, this->bufferSize);
         if (chunk < 0) {
             Helper::handleError(WRITE_ERROR, errno);
         }
@@ -168,28 +196,35 @@ void Socket::writeStringInChunks(char* string) {
 }
 
 
-int *Socket::readArrayOfInts(int numberOfElements) {
+int *Socket::readArrayOfInts(int numberOfElements, bool isFromServer) {
     int *array = (int*) malloc(numberOfElements * sizeof(int));
 
     for(int i = 0; i < numberOfElements; i++) {
-        array[i] = readNumber();
+        array[i] = readNumber(isFromServer);
     }
 
     return array;
 }
 
-void Socket::writeArrayOfInts(int* array, int numberOfElements) {
+void Socket::writeArrayOfInts(int* array, int numberOfElements, bool isFromServer) {
     for(int i = 0; i < numberOfElements; i++) {
-        writeNumber(array[i]);
+        writeNumber(array[i], isFromServer);
     }
 }
 
 
-void Socket::writeBitArrayInChunks(BitArray* bitArray) {
+void Socket::writeBitArrayInChunks(BitArray* bitArray, bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+
     /* BitArray is an array of ints. So we firstly pass the array in order to set him
      * to the read bitArray */
-    this->writeNumber(bitArray->getNumberOfBitArrayInts());
-    this->writeArrayOfInts(bitArray->getBitArray(), bitArray->getNumberOfBitArrayInts());
+    this->writeNumber(bitArray->getNumberOfBitArrayInts(), isFromServer);
+    this->writeArrayOfInts(bitArray->getBitArray(), bitArray->getNumberOfBitArrayInts(), isFromServer);
 
     int totalBytes = sizeof(BitArray);
 
@@ -197,7 +232,7 @@ void Socket::writeBitArrayInChunks(BitArray* bitArray) {
     int chunk;
 
     if(totalBytes < this->bufferSize) {
-        if (::write(createdSocketFd, bitArray, totalBytes) < 0) {
+        if (::write(fd, bitArray, totalBytes) < 0) {
             Helper::handleError(WRITE_ERROR, errno + 4);
         }
 
@@ -205,7 +240,7 @@ void Socket::writeBitArrayInChunks(BitArray* bitArray) {
     }
 
     while(writtenBytes < totalBytes) {
-        chunk = ::write(createdSocketFd, bitArray, this->bufferSize);
+        chunk = ::write(fd, bitArray, this->bufferSize);
         if (chunk < 0) {
             Helper::handleError(WRITE_ERROR, errno + 5);
         }
@@ -217,11 +252,18 @@ void Socket::writeBitArrayInChunks(BitArray* bitArray) {
     }
 }
 
-BitArray* Socket::readBitArrayInChunks() {
+BitArray* Socket::readBitArrayInChunks(bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+
     /* BitArray is an array of ints. So we firstly read the array in order to set him
      * to the read bitArray */
-    int numberOfBitArrayInts = this->readNumber();
-    int *intsOfBitArray = this->readArrayOfInts(numberOfBitArrayInts);
+    int numberOfBitArrayInts = this->readNumber(isFromServer);
+    int *intsOfBitArray = this->readArrayOfInts(numberOfBitArrayInts, isFromServer);
 
     int bitArraySize = sizeof(BitArray);
 
@@ -231,7 +273,7 @@ BitArray* Socket::readBitArrayInChunks() {
     }
 
     if(bitArraySize <= this->bufferSize) {
-        if (::read(acceptedSocketFd, bitArray, bitArraySize) < 0) {
+        if (::read(fd, bitArray, bitArraySize) < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
 
@@ -245,7 +287,7 @@ BitArray* Socket::readBitArrayInChunks() {
     int chunk;
 
     while(readBytes < bitArraySize) {
-        chunk = ::read(acceptedSocketFd, rawBytes, this->bufferSize);
+        chunk = ::read(fd, rawBytes, this->bufferSize);
         if (chunk < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
@@ -260,16 +302,23 @@ BitArray* Socket::readBitArrayInChunks() {
 }
 
 
-BloomFilter *Socket::readBloomFilterInChunks() {
+BloomFilter *Socket::readBloomFilterInChunks(bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+
     // While reading a BloomFilter, firstly we have to read it's pointer variables,
     // and create them in order to pass them in the new BF
-    BitArray* bitArray = this->readBitArrayInChunks();
+    BitArray* bitArray = this->readBitArrayInChunks(isFromServer);
 
-    int countryNameLength = this->readNumber();
-    char* countryName = this->readStringInChunks(countryNameLength);
+    int countryNameLength = this->readNumber(isFromServer);
+    char* countryName = this->readStringInChunks(countryNameLength, isFromServer);
 
-    int virusNameLength = this->readNumber();
-    char* virusName = this->readStringInChunks(virusNameLength);
+    int virusNameLength = this->readNumber(isFromServer);
+    char* virusName = this->readStringInChunks(virusNameLength, isFromServer);
 
     int bloomFilterSize = sizeof(BloomFilter);
 
@@ -279,7 +328,7 @@ BloomFilter *Socket::readBloomFilterInChunks() {
     }
 
     if(bloomFilterSize <= this->bufferSize) {
-        if (::read(acceptedSocketFd, bloomFilter, bloomFilterSize) < 0) {
+        if (::read(fd, bloomFilter, bloomFilterSize) < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
 
@@ -295,7 +344,7 @@ BloomFilter *Socket::readBloomFilterInChunks() {
     int chunk;
 
     while(readBytes < bloomFilterSize) {
-        chunk = ::read(acceptedSocketFd, rawBytes, this->bufferSize);
+        chunk = ::read(fd, rawBytes, this->bufferSize);
         if (chunk < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
@@ -311,19 +360,26 @@ BloomFilter *Socket::readBloomFilterInChunks() {
     return bloomFilter;
 }
 
-void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter) {
+void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter, bool isFromServer) {
+    int fd;
+    if(isFromServer) {
+        fd = acceptedSocketFd;
+    } else {
+        fd = createdSocketFd;
+    }
+
     // While writing a BloomFilter, firstly we have to write it's pointer variables
-    this->writeBitArrayInChunks(bloomFilter->getBitArray());
+    this->writeBitArrayInChunks(bloomFilter->getBitArray(), isFromServer);
 
     int countryNameLength = strlen(bloomFilter->getCountryName()) + 1;
     cout << "Size: " << countryNameLength << endl;
-    this->writeNumber(countryNameLength);
-    this->writeStringInChunks(bloomFilter->getCountryName());
+    this->writeNumber(countryNameLength, isFromServer);
+    this->writeStringInChunks(bloomFilter->getCountryName(), isFromServer);
 
     int virusNameLength = strlen(bloomFilter->getVirusName()) + 1;
     cout << "Size: " << virusNameLength << endl;
-    this->writeNumber(virusNameLength);
-    this->writeStringInChunks(bloomFilter->getVirusName());
+    this->writeNumber(virusNameLength, isFromServer);
+    this->writeStringInChunks(bloomFilter->getVirusName(), isFromServer);
 
     int totalBytes = sizeof(BloomFilter);
 
@@ -331,7 +387,7 @@ void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter) {
     int chunk;
 
     if(totalBytes < this->bufferSize) {
-        if (::write(createdSocketFd, bloomFilter, totalBytes) < 0) {
+        if (::write(fd, bloomFilter, totalBytes) < 0) {
             Helper::handleError(WRITE_ERROR, errno + 2);
         }
 
@@ -339,7 +395,7 @@ void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter) {
     }
 
     while(writtenBytes < totalBytes) {
-        chunk = ::write(createdSocketFd, bloomFilter, this->bufferSize);
+        chunk = ::write(fd, bloomFilter, this->bufferSize);
         if (chunk < 0) {
             Helper::handleError(WRITE_ERROR, errno + 3);
         }
