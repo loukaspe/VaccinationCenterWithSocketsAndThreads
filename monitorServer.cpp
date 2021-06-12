@@ -29,6 +29,8 @@ CitizenRecordsFileReader *fileReader;
 
 pthread_mutex_t readFromCyclicBufferLock = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t updateCyclicBufferLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mainThreadWaitToSendBloomFiltersLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t mainThreadWaitToSendBloomFiltersConditionVariable;
 
 int main(int argc, char **argv) {
     int opt;
@@ -121,6 +123,7 @@ int main(int argc, char **argv) {
     );
 
     pthread_t thread[numberOfThreads];
+    pthread_cond_init(&mainThreadWaitToSendBloomFiltersConditionVariable, NULL) ;
     cyclicBuffer = (char**) malloc(cyclicBufferSize * sizeof(char*));;
     numberOfFilesMovedToBuffer = 0;
     numberOfReadFiles = 0;
@@ -174,6 +177,29 @@ int main(int argc, char **argv) {
 //        current = current->next;
 //    }
 
+    /* Waiting on threads to finish reading from input files in order to send data */
+    for(int i = 0; i < numberOfThreads; i++) {
+        if((
+            error = pthread_mutex_lock(&mainThreadWaitToSendBloomFiltersLock)
+        )) {
+            Helper::handleError("Error: main thread waiting to send mutex lock", error);
+        }
+
+        pthread_cond_wait (
+            &mainThreadWaitToSendBloomFiltersConditionVariable,
+            &mainThreadWaitToSendBloomFiltersLock
+        );
+        cout << "Waited on " << i << endl;
+
+        if((
+            error = pthread_mutex_unlock(&mainThreadWaitToSendBloomFiltersLock)
+        )) {
+            Helper::handleError("Error: main thread waiting to send mutex lock", error);
+        }
+    }
+
+    cout << "Send data" << endl;
+
     socket->closeSocket();
     for(int i = 0; i < numberOfThreads; i++) {
         if(
@@ -186,8 +212,15 @@ int main(int argc, char **argv) {
     if (
         (error = pthread_mutex_destroy(&readFromCyclicBufferLock))
         || (error = pthread_mutex_destroy(&updateCyclicBufferLock))
+        || (error = pthread_mutex_destroy(&mainThreadWaitToSendBloomFiltersLock))
     ) {
         Helper::handleError("Error: mutex_destroy()", error);
+    }
+
+    if (
+        (error = pthread_cond_destroy(&mainThreadWaitToSendBloomFiltersConditionVariable))
+    ) {
+        Helper::handleError("Error: condition_variable_destroy()", error);
     }
 
 //    pthread_exit ( NULL ) ;
@@ -325,7 +358,7 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
             Helper::handleError("Error: update mutex lock", error);
         }
 
-        //Fill Cyclic Buffer's empty positions
+        /* Fill Cyclic Buffer's empty positions */
         for(int i = 0; i < cyclicBufferSize; i++) {
             if(cyclicBuffer[i] == NULL && numberOfFilesMovedToBuffer < totalNumberOfFiles) {
                 cyclicBuffer[i] = filesNames[numberOfFilesMovedToBuffer];
@@ -340,5 +373,25 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
         }
     }
 
-    pthread_exit (NULL) ;
+    /* Notify main thread that it can send data */
+
+    if((
+        error = pthread_mutex_lock(&mainThreadWaitToSendBloomFiltersLock)
+    )) {
+        Helper::handleError("Error: main thread waiting to send mutex lock", error);
+    }
+
+    cout << "Finished reading data" << endl;
+
+    pthread_cond_signal(
+        &mainThreadWaitToSendBloomFiltersConditionVariable
+    );
+
+    if((
+        error = pthread_mutex_unlock(&mainThreadWaitToSendBloomFiltersLock)
+    )) {
+        Helper::handleError("Error: main thread waiting to send mutex lock", error);
+    }
+
+//    pthread_exit (NULL) ;
 }
