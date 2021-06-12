@@ -124,6 +124,14 @@ void TravelMonitorClient::createMonitorsAndPassThemData() {
         this->sockets[i]->bindToSocket();
         this->sockets[i]->listenToSocket();
         acceptedSocketFds[i] = this->sockets[i]->acceptSocket();
+
+        /* Because in Prj2 I did not pass paths to monitors, but country names
+         * I did not change that due to lack of time. So I pass countryNames as
+         * args in the execvp() and then I also have to pass the input_dir so that
+         * the monitors can build the paths on their own */
+        int inputDirectoryStringLength = strlen(inputDirectory);
+        this->sockets[i]->writeNumber(inputDirectoryStringLength, true);
+        this->sockets[i]->writeStringInChunks(inputDirectory, true);
     }
 }
 

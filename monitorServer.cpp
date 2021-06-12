@@ -64,10 +64,12 @@ int main(int argc, char **argv) {
     }
 
     host = gethostbyname(hostname);
-
     socket->createSocket(host);
     socket->connectToSocket();
 
+    int inputDirectoryStringLength = socket->readNumber();
+    inputDirectory = socket->readStringInChunks(inputDirectoryStringLength);
+    cout << inputDirectory << endl;
 
 
     /*
