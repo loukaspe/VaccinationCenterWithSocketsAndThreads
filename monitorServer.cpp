@@ -27,8 +27,8 @@ CountryLinkedList *countries;
 VaccinationCenter *vaccinationCenter;
 CitizenRecordsFileReader *fileReader;
 
-pthread_mutex_t readLock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t updateLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t readFromCyclicBufferLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t updateCyclicBufferLock = PTHREAD_MUTEX_INITIALIZER;
 
 int main(int argc, char **argv) {
     int opt;
@@ -277,7 +277,7 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
         }
 
         /* Read filename from Cyclic Buffer */
-        pthread_mutex_lock(&readLock);
+        pthread_mutex_lock(&readFromCyclicBufferLock);
         if(cyclicBuffer[nextPositionOfBufferToBeRead] != NULL) {
             cout << "Read " << cyclicBuffer[nextPositionOfBufferToBeRead] << " position " << nextPositionOfBufferToBeRead << " from thread " << pthread_self() << endl;
             fileReader->readAndUpdateStructures(cyclicBuffer[nextPositionOfBufferToBeRead]);
@@ -285,21 +285,21 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
             nextPositionOfBufferToBeRead = (++nextPositionOfBufferToBeRead)%cyclicBufferSize;
             numberOfReadFiles++;
         }
-        pthread_mutex_unlock(&readLock);
+        pthread_mutex_unlock(&readFromCyclicBufferLock);
 
         if(numberOfFilesMovedToBuffer == totalNumberOfFiles) {
             continue;
         }
 
         //Fill Cyclic Buffer's empty positions
-        pthread_mutex_lock(&updateLock);
+        pthread_mutex_lock(&updateCyclicBufferLock);
         for(int i = 0; i < cyclicBufferSize; i++) {
             if(cyclicBuffer[i] == NULL && numberOfFilesMovedToBuffer < totalNumberOfFiles) {
                 cyclicBuffer[i] = Helper::copyString(filesNames[numberOfFilesMovedToBuffer]);
                 numberOfFilesMovedToBuffer++;
             }
         }
-        pthread_mutex_unlock(&updateLock);
+        pthread_mutex_unlock(&updateCyclicBufferLock);
     }
 
     return NULL;
