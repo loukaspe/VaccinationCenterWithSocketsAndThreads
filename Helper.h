@@ -25,6 +25,9 @@ public:
     static char** getAllFilesNames(char* path);
     static int getAllFilesNumber(char* path);
     static int getCeilingOfDividedInts(int, int);
+    static char **getCountiesNamesFromLastCommandLineArguments(int, char **, int);
+    static int getTotalFilePathsNumber(int, char**, int, char*);
+    static char** getFilePathsNames(int, char**, int, char*, int);
 private:
     static const char* STRING_COPY_ERROR;
     static bool hasStringNewLineCharacterInTheEnd(char*);

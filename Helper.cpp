@@ -228,3 +228,97 @@ int Helper::getAllFilesNumber(char *path) {
     closedir(directory);
     return numberOfFiles;
 }
+
+
+char** Helper::getCountiesNamesFromLastCommandLineArguments(int numberOfPaths, char **argv, int argc) {
+    char **countryNames = (char **) malloc(numberOfPaths * sizeof(char *));
+    for (int i = numberOfPaths - 1; i >= 0; i--) {
+        countryNames[i] = argv[argc - 1 - i];
+    }
+
+    return countryNames;
+}
+
+int Helper::getTotalFilePathsNumber(
+        int numberOfCountries,
+        char** countryNames,
+        int inputDirectoryStringLength,
+        char* inputDirectory
+) {
+    int totalNumberOfFiles = 0;
+
+    char* directoryCharacter = "/";
+    int directoryCharacterSize = strlen(directoryCharacter);
+
+    for(int i = 0; i < numberOfCountries; i++) {
+        // We build the path for reading the files with the records
+        int countryNameSize = strlen(countryNames[i]);
+        char *path = (char*) malloc(
+                inputDirectoryStringLength + countryNameSize + directoryCharacterSize + 1
+        );
+        strcpy(path, inputDirectory);
+        strcat(path, directoryCharacter);
+        strcat(path, countryNames[i]);
+
+        int numberOfFiles = Helper::getAllFilesNumber(path);
+
+        totalNumberOfFiles += numberOfFiles;
+
+        delete path;
+    }
+
+    return totalNumberOfFiles;
+}
+
+char** Helper::getFilePathsNames(
+        int numberOfCountries,
+        char** countryNames,
+        int inputDirectoryStringLength,
+        char* inputDirectory,
+        int totalNumberOfFiles
+) {
+    char** filesNames = (char**) malloc(totalNumberOfFiles * sizeof(char*));
+    // Temp variable for keeping index in the double for loop for the filesNames
+    // array
+    int k = 0;
+
+    char* directoryCharacter = "/";
+    int directoryCharacterSize = strlen(directoryCharacter);
+
+    for(int i = 0; i < numberOfCountries; i++) {
+        // We build the path for reading the files with the records
+        int countryNameSize = strlen(countryNames[i]);
+        char *path = (char*) malloc(
+                inputDirectoryStringLength + countryNameSize + directoryCharacterSize + 1
+        );
+        strcpy(path, inputDirectory);
+        strcat(path, directoryCharacter);
+        strcat(path, countryNames[i]);
+
+        int numberOfFiles = Helper::getAllFilesNumber(path);
+        char** countriesFile = Helper::getAllFilesNames(path);
+
+        delete path;
+        for(int j = 0; j < numberOfFiles; j++) {
+            // We build the path for each records' file
+            int inputFileSize = strlen(countriesFile[j]);
+            filesNames[k] = (char*) malloc(
+                    inputDirectoryStringLength
+                    + countryNameSize
+                    + 2 * directoryCharacterSize
+                    + inputFileSize
+                    + 1
+            );
+            strcpy(filesNames[k], inputDirectory);
+            strcat(filesNames[k], directoryCharacter);
+            strcat(filesNames[k], countryNames[i]);
+            strcat(filesNames[k], directoryCharacter);
+            strcat(filesNames[k], countriesFile[j]);
+
+            k++;
+        }
+    }
+
+    return filesNames;
+}
+
