@@ -13,6 +13,7 @@ public:
     void addAtStart(BloomFilter *);
     BloomFilterLinkedListNode *findByVirusAndCountry(char *, char *);
     int getSize() const;
+    BloomFilterLinkedListNode * getHead() const;
 private:
     BloomFilterLinkedListNode *head;
     int size;

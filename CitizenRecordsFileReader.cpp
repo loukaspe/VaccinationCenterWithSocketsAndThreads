@@ -41,22 +41,22 @@ void CitizenRecordsFileReader::readAndUpdateStructures(char* filename) {
     // data is given
     while (getline(&line, &length, inputFile) != -1) {
         temp = strtok(line, SPACE_DELIMITER);
-        citizenId = temp;
+        citizenId = Helper::copyString(temp);
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        firstName = temp;
+        firstName = Helper::copyString(temp);
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        lastName = temp;
+        lastName = Helper::copyString(temp);
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        country = temp;
+        country = Helper::copyString(temp);
 
         temp = strtok(NULL, SPACE_DELIMITER);
         age = atoi(temp);
 
         temp = strtok(NULL, SPACE_DELIMITER);
-        virusName = temp;
+        virusName = Helper::copyString(temp);
 
         temp = strtok(NULL, SPACE_DELIMITER);
         temp = Helper::removeNewLineCharacterFromString(temp);
@@ -95,7 +95,12 @@ void CitizenRecordsFileReader::readAndUpdateStructures(char* filename) {
                     atoi(citizenId),
                     newVaccination
             );
-            tempVirus->getVaccinatedPeopleBloomFilter()->add(citizenId);
+            BloomFilter *bloomFilter = tempVirus->getVaccinatedPeopleBloomFilterByCountry(country);
+            if(bloomFilter != NULL) {
+                bloomFilter->add(citizenId);
+            } else {
+                cout << "No BloomFilter for " << country << " and " << virusName << endl;
+            }
         }
         else {
             if (this->isPersonAlreadyInsertedAsVaccinated(tempVirus, citizenId)) {

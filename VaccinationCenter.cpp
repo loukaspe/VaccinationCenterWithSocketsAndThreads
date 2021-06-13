@@ -21,7 +21,21 @@ void VaccinationCenter::vaccineStatusBloom(char *citizenId, char *virusName) {
         return;
     }
 
-    bool isVaccinated = virus->getVaccinatedPeopleBloomFilter()->check(citizenId);
+    bool isVaccinated = false;
+    BloomFilterLinkedList* list = virus->getVaccinatedPeopleBloomFilterLinkedList();
+    BloomFilterLinkedListNode *current = virus->getVaccinatedPeopleBloomFilterLinkedList()->getHead();
+    while(current != NULL) {
+        BloomFilter* bloomFilter = current->getBloomFilter();
+        if(bloomFilter != NULL) {
+            isVaccinated = bloomFilter->check(citizenId);
+        }
+
+        if(isVaccinated) {
+            break;
+        }
+
+        current = current->next;
+    }
 
     if (isVaccinated) {
         cout << "MAYBE" << endl;
@@ -148,7 +162,13 @@ void VaccinationCenter::insertVaccinated(
             atoi(citizenId),
             newVaccination
     );
-    virus->getVaccinatedPeopleBloomFilter()->add(citizenId);
+
+    BloomFilter* bloomFilter = virus->getVaccinatedPeopleBloomFilterByCountry(country);
+    if(bloomFilter == NULL) {
+        cout << "No Bloom Filter found for " << virusName << " and " << country << endl;
+    }
+
+    bloomFilter->add(citizenId);
 }
 
 void VaccinationCenter::insertNotVaccinated(
@@ -265,10 +285,14 @@ void VaccinationCenter::checkAndAddPerson(
 }
 
 void VaccinationCenter::checkAndAddVirus(char *virusName, char *countryName) {
-    if (this->viruses->findByName(virusName) == NULL) {
+    VirusLinkedListNode* virusNode = this->viruses->findByName(virusName);
+    if (virusNode == NULL) {
+        BloomFilterLinkedList *newBloomFilterLinkedList = new BloomFilterLinkedList();
         BloomFilter *newBloomFilter = new BloomFilter();
+        cout << "\t" << countryName << " " << virusName << endl;
         newBloomFilter->setCountryName(countryName);
         newBloomFilter->setVirusName(virusName);
+        newBloomFilterLinkedList->addAtStart(newBloomFilter);
         VaccinatedSkipList *newVaccinatedSkipList = new VaccinatedSkipList();
         NotVaccinatedSkipList *newNotVaccinatedSkipList = new NotVaccinatedSkipList();
 
@@ -276,12 +300,29 @@ void VaccinationCenter::checkAndAddVirus(char *virusName, char *countryName) {
                 virusName,
                 newVaccinatedSkipList,
                 newNotVaccinatedSkipList,
-                newBloomFilter
+                newBloomFilterLinkedList
         );
 
         this->viruses->addAtStart(newVirus);
+        return;
     }
 
+    Virus* virus = virusNode->getVirus();
+    if(virus != NULL) {
+        BloomFilterLinkedList *list = virus->getVaccinatedPeopleBloomFilterLinkedList();
+        BloomFilterLinkedListNode *bloomFilterNode = list->findByVirusAndCountry(
+            virus->getVirusName(),
+            countryName
+        );
+
+        if(bloomFilterNode == NULL) {
+            BloomFilter *newBloomFilter = new BloomFilter();
+            cout << "\t" << countryName << " " << virusName << endl;
+            newBloomFilter->setVirusName(virusName);
+            newBloomFilter->setCountryName(countryName);
+            list->addAtStart(newBloomFilter);
+        }
+    }
 }
 
 PersonLinkedList *VaccinationCenter::getPeople() const {

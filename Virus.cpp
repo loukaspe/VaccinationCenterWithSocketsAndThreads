@@ -4,11 +4,11 @@ Virus::Virus(
     char *virusName,
     VaccinatedSkipList *vaccinatedPeopleList,
     NotVaccinatedSkipList *notVaccinatedPeopleList,
-    BloomFilter *notVaccinatedPeopleBloomFilter
+    BloomFilterLinkedList *vaccinatedPeopleBloomFilterLinkedList
 ) : virusName(virusName),
     vaccinatedPeopleList(vaccinatedPeopleList),
     notVaccinatedPeopleList(notVaccinatedPeopleList),
-    vaccinatedPeopleBloomFilter(notVaccinatedPeopleBloomFilter) {}
+    vaccinatedPeopleBloomFilterLinkedList(vaccinatedPeopleBloomFilterLinkedList) {}
 
 char *Virus::getVirusName() const {
     return virusName;
@@ -22,8 +22,8 @@ NotVaccinatedSkipList *Virus::getNotVaccinatedPeopleList() const {
     return notVaccinatedPeopleList;
 }
 
-BloomFilter *Virus::getVaccinatedPeopleBloomFilter() const {
-    return vaccinatedPeopleBloomFilter;
+BloomFilterLinkedList *Virus::getVaccinatedPeopleBloomFilterLinkedList() const {
+    return vaccinatedPeopleBloomFilterLinkedList;
 }
 
 /** There is a need to print if the person is Vaccinated with two different ways,
@@ -53,4 +53,17 @@ void Virus::printIfPersonIsVaccinated(char* citizenId, bool shouldPrintVirusName
     else {
         cout << "NOT VACCINATED" << endl;
     }
+}
+
+BloomFilter *Virus::getVaccinatedPeopleBloomFilterByCountry(char *countryName) const {
+    BloomFilterLinkedListNode *node = this->vaccinatedPeopleBloomFilterLinkedList->findByVirusAndCountry(
+        this->virusName,
+        countryName
+    );
+
+    if(node == NULL) {
+        return NULL;
+    }
+
+    return node->getBloomFilter();
 }

@@ -36,3 +36,7 @@ BloomFilterLinkedListNode *BloomFilterLinkedList::findByVirusAndCountry(
 int BloomFilterLinkedList::getSize() const {
     return size;
 }
+
+BloomFilterLinkedListNode *BloomFilterLinkedList::getHead() const {
+    return head;
+}
