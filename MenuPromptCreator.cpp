@@ -216,7 +216,7 @@ int MenuPromptCreator::executeInputCommand() {
 
     // exit command
     if (strcmp(command, MenuPromptCreator::AVAILABLE_COMMANDS[4]) == 0) {
-        this->travelMonitorClient->exit();
+        this->travelMonitorClient->exitTravelMonitor();
         free(input);
         return EXIT;
     }

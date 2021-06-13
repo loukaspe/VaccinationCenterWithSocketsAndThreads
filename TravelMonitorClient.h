@@ -37,6 +37,7 @@ private:
     int *acceptedSocketFds;
 
     void createMonitorArguments();
+    int findMonitorForCountry(char*);
 
     static const char* FORK_ERROR;
 public:
@@ -49,7 +50,15 @@ public:
     void travelStatsForAllCountries(char*, Date*, Date*);
     void addVaccinationRecords(char*);
     void searchVaccinationStatus(char*);
-    void exit();
+    void exitTravelMonitor();
+
+    /* NUMBER CONSTANTS FOR COMMUNICATION BETWEEN MONITORS AND TRAVEL MONITOR FOR
+    * USER REQUESTS */
+    static const int TRAVEL_REQUEST = 1;
+    static const int TRAVEL_STATS = 2;
+    static const int ADD_VACCINATION_RECORDS = 3;
+    static const int SEARCH_VACCINATION_STATUS = 4;
+    static const int EXIT = 5;
 };
 
 

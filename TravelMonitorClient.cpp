@@ -188,6 +188,7 @@ void TravelMonitorClient::readDataFromMonitors() {
                         k++;
                     }
 
+                    sockets[i]->closeSocket();
                     pollFds[i].events = 0;
                     pollFds[i].fd = -1;
                 }
@@ -209,6 +210,52 @@ void TravelMonitorClient::travelRequest(
     char *countryTo,
     char *virusName
 ) {
+//    bool isVaccinated;
+//
+//    BloomFilterLinkedListNode* node = this->bloomFilters->findByVirusAndCountry(
+//        virusName,
+//        countryFrom
+//    );
+//
+//    if(node == NULL) {
+//        cout << "REQUEST REJECTED - YOU ARE NOT VACCINATED" << endl;
+//        return;
+//    }
+//
+//    BloomFilter *bloomFilter = node->getBloomFilter();
+//    if(bloomFilter == NULL) {
+//        cout << "REQUEST REJECTED - YOU ARE NOT VACCINATED" << endl;
+//        return;
+//    }
+//
+//    isVaccinated = bloomFilter->check(citizenId);
+//    if(!isVaccinated) {
+//        cout << "REQUEST REJECTED - YOU ARE NOT VACCINATED" << endl;
+//        return;
+//    }
+//
+//    int numberOfMonitorResponsibleForCountry = this->findMonitorForCountry(
+//        countryFrom
+//    );
+//
+//    /* We send to Monitor the following:
+//     * 1. type of request constant (for monitor to know which command is requested)
+//     * 2. citizenId (first it's size and then itself)
+//     * 3. date (first it's size and then itself)
+//     * 4. countryFrom (first it's size and then itself)
+//     * 5. virusName (first it's size and then itself)
+//     * */
+//    sockets[numberOfMonitorResponsibleForCountry]->writeNumber(TRAVEL_REQUEST, true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeNumber(strlen(citizenId) + 1, true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeStringInChunks(citizenId, true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeNumber(strlen(date->toString()) + 1, true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeStringInChunks(date->toString(), true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeNumber(strlen(countryFrom) + 1, true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeStringInChunks(countryFrom, true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeNumber(strlen(virusName) + 1, true);
+//    sockets[numberOfMonitorResponsibleForCountry]->writeStringInChunks(virusName, true);
+
+    cout << "TravelRequest Mock Response" << endl;
 
 }
 
@@ -218,7 +265,7 @@ void TravelMonitorClient::travelStatsForCountry(
     Date *date2,
     char *country
 ) {
-
+    cout << "TravelStats Mock Response" << endl;
 }
 
 void TravelMonitorClient::travelStatsForAllCountries(
@@ -226,24 +273,37 @@ void TravelMonitorClient::travelStatsForAllCountries(
     Date *date1,
     Date *date2
 ) {
-
+    cout << "TravelStats Mock Response" << endl;
 }
 
 void TravelMonitorClient::addVaccinationRecords(char *country) {
-
+    cout << "AddVaccinationRecords Mock Response" << endl;
 }
 
 void TravelMonitorClient::searchVaccinationStatus(char *citizenId) {
-
+    cout << "SearchVaccinationStatus Mock Response" << endl;
 }
 
-void TravelMonitorClient::exit() {
-
+void TravelMonitorClient::exitTravelMonitor() {
+    cout << "Exit Mock Response" << endl;
 }
 
 TravelMonitorClient::~TravelMonitorClient() {
+}
+
+// Very simple function to find which monitor is responsible for a country
+int TravelMonitorClient::findMonitorForCountry(char *countryName) {
     for(int i = 0; i < numberOfMonitors; i++) {
-        sockets[i]->closeSocket();
+        int j = 0;
+        while(monitorArguments[i][j] != NULL) {
+            if(strcmp(monitorArguments[i][j], countryName) == 0) {
+                return i;
+            }
+
+            j++;
+        }
     }
+
+    return 0;
 }
 

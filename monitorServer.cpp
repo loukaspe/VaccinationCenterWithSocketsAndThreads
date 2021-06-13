@@ -1,6 +1,7 @@
 #include "MonitorServer.h"
 #include <getopt.h>
 #include "Socket.h"
+#include "TravelMonitorClient.h"
 
 static const int NUMBER_OF_OPTIONS_ARGUMENTS = 10;
 using namespace std;
@@ -38,6 +39,17 @@ int main(int argc, char **argv) {
     int bloomSizeInKiloBytes;
     char *inputDirectory;
     numberOfThreads;
+
+    /* Variables expected from TravelMonitor for responding to user requests */
+    int citizenIdLength;
+    char* citizenId;
+    int dateLength;
+    char* dateAsString;
+    Date* date;
+    int countryFromLength;
+    char* countryFrom;
+    int virusNameLength;
+    char* virusName;
 
     // Host declaration (static declaration of hostname with large size)
     struct hostent *host;
@@ -222,6 +234,38 @@ int main(int argc, char **argv) {
 
         currentVirus = currentVirus->next;
     }
+
+    // Monitor stay alive to serve the user requests
+//    while(true) {
+//        int typeOfRequest = socket->readNumber();
+//        cout << "OUAOY " << typeOfRequest << endl;
+//        if(typeOfRequest == TravelMonitorClient::TRAVEL_REQUEST) {
+//            citizenIdLength = socket->readNumber();
+//            citizenId = socket->readStringInChunks(citizenIdLength);
+//            dateLength = socket->readNumber();
+//            dateAsString = socket->readStringInChunks(dateLength);
+//            date = new Date(dateAsString);
+//            countryFromLength = socket->readNumber();
+//            countryFrom = socket->readStringInChunks(countryFromLength);
+//            virusNameLength = socket->readNumber();
+//            virusName = socket->readStringInChunks(virusNameLength);
+//
+//            cout << citizenId << endl;
+//            cout << dateAsString << endl;
+//            cout << countryFrom << endl;
+//            cout << virusName << endl;
+//        } else if (typeOfRequest == TravelMonitorClient::TRAVEL_STATS) {
+//
+//        } else if (typeOfRequest == TravelMonitorClient::ADD_VACCINATION_RECORDS) {
+//
+//        } else if (typeOfRequest == TravelMonitorClient::SEARCH_VACCINATION_STATUS) {
+//
+//        } else if (typeOfRequest == TravelMonitorClient::EXIT) {
+//            break;
+//        } else {
+//            Helper::handleError("Error: No such command exists in MonitorServer");
+//        }
+//    }
 
     socket->closeSocket();
 
