@@ -174,7 +174,16 @@ void TravelMonitorClient::readDataFromMonitors() {
             if (pollFds[i].revents & POLLIN) {
                 if (pollFds[i].fd == this->acceptedSocketFds[i]) {
 
-                    /* EXPECT BLOOM FILTERS */
+                    /* Receive BloomFilters from Monitors */
+                    int numberOfBloomFiltersExpected = sockets[i]->readNumber(true);
+                    cout << "Expect " << numberOfBloomFiltersExpected << endl;
+
+                    int k = 0;
+                    for(int j = 0; j < numberOfBloomFiltersExpected; j++) {
+                        BloomFilter* bloomFilter = sockets[i]->readBloomFilterInChunks(true);
+                        cout << "ooooooooooooooCountry: " << bloomFilter->getCountryName() << " and " << "Virus: " << bloomFilter->getVirusName() << endl;                        cout << "Received BF " << k << endl;
+                        k++;
+                    }
 
                     sockets[i]->closeSocket();
                     pollFds[i].events = 0;

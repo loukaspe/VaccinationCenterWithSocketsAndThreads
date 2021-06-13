@@ -371,13 +371,13 @@ void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter, bool isFromServe
     // While writing a BloomFilter, firstly we have to write it's pointer variables
     this->writeBitArrayInChunks(bloomFilter->getBitArray(), isFromServer);
 
+    cout << "Country: " << bloomFilter->getCountryName() << " and " << "Virus: " << bloomFilter->getVirusName() << endl;
+
     int countryNameLength = strlen(bloomFilter->getCountryName()) + 1;
-    cout << "Size: " << countryNameLength << endl;
     this->writeNumber(countryNameLength, isFromServer);
     this->writeStringInChunks(bloomFilter->getCountryName(), isFromServer);
 
     int virusNameLength = strlen(bloomFilter->getVirusName()) + 1;
-    cout << "Size: " << virusNameLength << endl;
     this->writeNumber(virusNameLength, isFromServer);
     this->writeStringInChunks(bloomFilter->getVirusName(), isFromServer);
 

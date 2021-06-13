@@ -158,28 +158,6 @@ int main(int argc, char **argv) {
 //        fileReader
 //    );
 //
-//    /*
-//     * SEND FILES
-//     *
-//     */
-//    // Every Virus in the Monitor has one BloomFilter. So the Monitor will send
-//    // to the TravelMonitor numberOfViruses BloomFilters.
-//    int numberOfViruses = viruses->getSize();
-//    int numberOfBloomFiltersSent = numberOfViruses;
-//
-//    pipeWriter->openPipe();
-//
-//    // Send through pipes the number of expected bloom filters
-//    pipeWriter->writeNumber(numberOfBloomFiltersSent);
-//
-//    VirusLinkedListNode *current = viruses->getHead();
-//    while(current != NULL) {
-//        // Send through pipes the bloom filters of the Monitor
-//        BloomFilter* temp = current->getVirus()->getVaccinatedPeopleBloomFilter();
-//        pipeWriter->writeBloomFilterInChunks(temp);
-//        current = current->next;
-//    }
-
     if((
         error = pthread_mutex_lock(&mainThreadWaitToSendBloomFiltersLock)
     )) {
@@ -201,9 +179,52 @@ int main(int argc, char **argv) {
         Helper::handleError("Error: main thread waiting to send mutex lock", error);
     }
 
-    cout << "Send data" << endl;
+    /* Send Bloom Filters back to TravelMonitor*/
+
+    // Firstly we count the Bloom Filter that we are gonna send to TravelMonitor
+    int numberOfBloomFiltersSent = 0;
+
+    VirusLinkedListNode *currentVirus = viruses->getHead();
+    BloomFilterLinkedListNode *currentBloomFilter;
+    while(currentVirus != NULL) {
+        // Send through socket the bloom filters of the Monitor
+        BloomFilterLinkedList* bloomFiltersList = currentVirus->getVirus()->getVaccinatedPeopleBloomFilterLinkedList();
+        currentBloomFilter = bloomFiltersList->getHead();
+        while(currentBloomFilter != NULL) {
+            numberOfBloomFiltersSent++;
+            currentBloomFilter = currentBloomFilter->next;
+        }
+
+        currentVirus = currentVirus->next;
+    }
+
+    // Send through sockets the number of expected bloom filters
+    socket->writeNumber(numberOfBloomFiltersSent);
+    cout << "Will send " << numberOfBloomFiltersSent << endl;
+
+    int i = 0;
+    currentVirus = viruses->getHead();
+    while(currentVirus != NULL) {
+        // Send through socket the bloom filters of the Monitor
+        BloomFilterLinkedList* bloomFiltersList = currentVirus->getVirus()->getVaccinatedPeopleBloomFilterLinkedList();
+        currentBloomFilter = bloomFiltersList->getHead();
+        while(currentBloomFilter != NULL) {
+            BloomFilter* temp = currentBloomFilter->getBloomFilter();
+            cout << "\t---" << temp->getVirusName() << " " << temp->getCountryName() << endl;
+            if(temp == NULL) {
+                Helper::handleError("Error: Attempted sending null BloomFilter");
+            }
+            socket->writeBloomFilterInChunks(temp);
+            cout << "Send BF " << i << endl;
+            i++;
+            currentBloomFilter = currentBloomFilter->next;
+        }
+
+        currentVirus = currentVirus->next;
+    }
 
     socket->closeSocket();
+
     for(int i = 0; i < numberOfThreads; i++) {
         if(
             (error = pthread_join(thread[i], NULL))
