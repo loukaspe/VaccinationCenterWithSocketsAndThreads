@@ -234,4 +234,6 @@ void MenuPromptCreator::createAndExecute() {
     while (executeInputCommand()) {}
 }
 
-MenuPromptCreator::MenuPromptCreator(TravelMonitorClient *travelMonitorClient) : travelMonitorClient(travelMonitorClient) {}
+MenuPromptCreator::MenuPromptCreator(
+    TravelMonitorClient *travelMonitorClient
+) :travelMonitorClient(travelMonitorClient) {}
