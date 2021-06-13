@@ -200,3 +200,43 @@ void TravelMonitorClient::readDataFromMonitors() {
 
     wait(NULL);
 }
+
+void TravelMonitorClient::travelRequest(
+    char *citizenId,
+    Date *date,
+    char *countryFrom,
+    char *countryTo,
+    char *virusName
+) {
+
+}
+
+void TravelMonitorClient::travelStatsForCountry(
+    char *virusName,
+    Date *date1,
+    Date *date2,
+    char *country
+) {
+
+}
+
+void TravelMonitorClient::travelStatsForAllCountries(
+    char *virusName,
+    Date *date1,
+    Date *date2
+) {
+
+}
+
+void TravelMonitorClient::addVaccinationRecords(char *country) {
+
+}
+
+void TravelMonitorClient::searchVaccinationStatus(char *citizenId) {
+
+}
+
+void TravelMonitorClient::exit() {
+
+}
+

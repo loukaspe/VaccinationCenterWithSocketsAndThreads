@@ -43,6 +43,12 @@ public:
     TravelMonitorClient(int, int, int, int, char*, int);
     void createMonitorsAndPassThemData();
     void readDataFromMonitors();
+    void travelRequest(char*, Date*, char*, char*, char*);
+    void travelStatsForCountry(char*, Date*, Date*, char*);
+    void travelStatsForAllCountries(char*, Date*, Date*);
+    void addVaccinationRecords(char*);
+    void searchVaccinationStatus(char*);
+    void exit();
 };
 
 

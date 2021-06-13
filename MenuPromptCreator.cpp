@@ -115,7 +115,13 @@ int MenuPromptCreator::executeInputCommand() {
 
         date1 = new Date(argumentOne);
 
-        //TODO: Add command
+        this->travelMonitorClient->travelRequest(
+           citizenId,
+           date1,
+           countryFrom,
+           countryTo,
+           virusName
+        );
 
         free(input);
         return CONTINUE_EXECUTION;
@@ -145,7 +151,11 @@ int MenuPromptCreator::executeInputCommand() {
             date1 = new Date(argumentTwo);
             date2 = new Date(argumentThree);
 
-            //TODO: Add command
+            this->travelMonitorClient->travelStatsForAllCountries(
+                virusName,
+                date1,
+                date2
+            );
         }
         else {
             virusName = argumentOne;
@@ -153,7 +163,12 @@ int MenuPromptCreator::executeInputCommand() {
             date2 = new Date(argumentThree);
             countryTo = argumentFour;
 
-            //TODO: Add command
+            this->travelMonitorClient->travelStatsForCountry(
+                virusName,
+                date1,
+                date2,
+                countryTo
+            );
         }
 
         free(input);
@@ -176,7 +191,7 @@ int MenuPromptCreator::executeInputCommand() {
             return CONTINUE_EXECUTION;
         }
 
-        //TODO: Add command
+        this->travelMonitorClient->addVaccinationRecords(countryTo);
 
         free(input);
         return CONTINUE_EXECUTION;
@@ -193,7 +208,7 @@ int MenuPromptCreator::executeInputCommand() {
             return CONTINUE_EXECUTION;
         }
 
-        //TODO: Add command
+        this->travelMonitorClient->searchVaccinationStatus(citizenId);
 
         free(input);
         return CONTINUE_EXECUTION;
@@ -201,7 +216,7 @@ int MenuPromptCreator::executeInputCommand() {
 
     // exit command
     if (strcmp(command, MenuPromptCreator::AVAILABLE_COMMANDS[4]) == 0) {
-        //TODO: Add command
+        this->travelMonitorClient->exit();
         free(input);
         return EXIT;
     }
