@@ -18,6 +18,7 @@ static const int NO_POLL_TIMEOUT = -1;
 #include <netinet/in.h>
 #include "BloomFilterLinkedList.h"
 #include "Socket.h"
+#include "VaccinationCenter.h"
 
 using namespace std;
 

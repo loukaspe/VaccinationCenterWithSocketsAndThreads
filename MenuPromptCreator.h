@@ -1,12 +1,12 @@
 #ifndef ERGASIA1_MENUPROMPTCREATOR_H
 #define ERGASIA1_MENUPROMPTCREATOR_H
 
-#include "VaccinationCenter.h"
+#include "TravelMonitorClient.h"
 
 class MenuPromptCreator {
     // I take as granted that the command size will not be bigger than 1024 chars
     static const size_t SIZE_OF_INPUT_BUFFER;
-    static const int COMMANDS_NUMBER = 9;
+    static const int COMMANDS_NUMBER = 6;
     static char *AVAILABLE_COMMANDS[MenuPromptCreator::COMMANDS_NUMBER];
 
     static const char* INSERT_YOUR_COMMAND_MESSAGE;
@@ -15,13 +15,13 @@ class MenuPromptCreator {
     static const char* READING_COMMAND_ERROR_MESSAGE;
 
 public:
-    MenuPromptCreator(VaccinationCenter *vaccinationCenter);
+    MenuPromptCreator(TravelMonitorClient *travelMonitorClient);
 
     static void showAllOptions();
     void createAndExecute();
 private:
     int executeInputCommand();
-    VaccinationCenter* vaccinationCenter;
+    TravelMonitorClient* travelMonitorClient;
 };
 
 

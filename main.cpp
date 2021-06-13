@@ -1,4 +1,4 @@
-#include "TravelMonitorClient.h"
+#include "MenuPromptCreator.h"
 #include <getopt.h>
 
 const char *PROGRAM_OPTIONS = "m:b:c:s:i:t:";
@@ -50,8 +50,12 @@ int main(int argc, char *argv[]) {
             numberOfThreads
     );
 
+    MenuPromptCreator *menuPromptCreator = new MenuPromptCreator(travelMonitor);
+
     travelMonitor->createMonitorsAndPassThemData();
     travelMonitor->readDataFromMonitors();
+
+    menuPromptCreator->createAndExecute();
 
     return 0;
 }
