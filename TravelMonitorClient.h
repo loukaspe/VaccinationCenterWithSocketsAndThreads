@@ -41,6 +41,7 @@ private:
     static const char* FORK_ERROR;
 public:
     TravelMonitorClient(int, int, int, int, char*, int);
+    ~TravelMonitorClient();
     void createMonitorsAndPassThemData();
     void readDataFromMonitors();
     void travelRequest(char*, Date*, char*, char*, char*);

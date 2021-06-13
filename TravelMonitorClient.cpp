@@ -36,6 +36,8 @@ TravelMonitorClient::TravelMonitorClient(
     createMonitorArguments();
 }
 
+
+
 /* Function that creates a 2D string array that holds the arguments' array for
  * each one of the numberOfMonitor MonitorsServers. Firstly we read all the countries'
  * subdirectories names and number for each monitor */
@@ -186,7 +188,6 @@ void TravelMonitorClient::readDataFromMonitors() {
                         k++;
                     }
 
-                    sockets[i]->closeSocket();
                     pollFds[i].events = 0;
                     pollFds[i].fd = -1;
                 }
@@ -238,5 +239,11 @@ void TravelMonitorClient::searchVaccinationStatus(char *citizenId) {
 
 void TravelMonitorClient::exit() {
 
+}
+
+TravelMonitorClient::~TravelMonitorClient() {
+    for(int i = 0; i < numberOfMonitors; i++) {
+        sockets[i]->closeSocket();
+    }
 }
 
