@@ -6,10 +6,15 @@ Important Disclaimers:
     some Socket writing-reading failed (with errno 104) and the whole program crashes.
     I never got to debug this, and my whole schedule went down.
     I did not spend as much time as it required due to employment, others lessons
-    and because I got infected to Covid19.
+    and because I got infected with Covid19.
     I truly have learned a lot about Pipes, Sockets, Threads etc in this course
     and I truly believe my effort in all of these Projects is worth the minimum for
     succeeding in this class.
+
+    I did not implement at all the logging system and the commands except /travelRequest
+    which is not functioning properly and thus is commented. Although not much is working,
+    you can see in the code that I have worked a lot for this project.
+
     Please be generous at my grading.
 
 1. The code consists of various classes and the code is (at my best effort) self-
