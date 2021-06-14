@@ -289,7 +289,6 @@ void VaccinationCenter::checkAndAddVirus(char *virusName, char *countryName) {
     if (virusNode == NULL) {
         BloomFilterLinkedList *newBloomFilterLinkedList = new BloomFilterLinkedList();
         BloomFilter *newBloomFilter = new BloomFilter();
-        cout << "\t" << countryName << " " << virusName << endl;
         newBloomFilter->setCountryName(countryName);
         newBloomFilter->setVirusName(virusName);
         newBloomFilterLinkedList->addAtStart(newBloomFilter);
@@ -317,7 +316,6 @@ void VaccinationCenter::checkAndAddVirus(char *virusName, char *countryName) {
 
         if(bloomFilterNode == NULL) {
             BloomFilter *newBloomFilter = new BloomFilter();
-            cout << "\t" << countryName << " " << virusName << endl;
             newBloomFilter->setVirusName(virusName);
             newBloomFilter->setCountryName(countryName);
             list->addAtStart(newBloomFilter);

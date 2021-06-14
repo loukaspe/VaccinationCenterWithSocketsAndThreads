@@ -178,12 +178,10 @@ void TravelMonitorClient::readDataFromMonitors() {
 
                     /* Receive BloomFilters from Monitors */
                     int numberOfBloomFiltersExpected = sockets[i]->readNumber(true);
-                    cout << "Expect " << numberOfBloomFiltersExpected << endl;
 
                     int k = 0;
                     for(int j = 0; j < numberOfBloomFiltersExpected; j++) {
                         BloomFilter* bloomFilter = sockets[i]->readBloomFilterInChunks(true);
-                        cout << "ooooooooooooooCountry: " << bloomFilter->getCountryName() << " and " << "Virus: " << bloomFilter->getVirusName() << endl;                        cout << "Received BF " << k << endl;
                         bloomFilters->addAtStart(bloomFilter);
                         k++;
                     }

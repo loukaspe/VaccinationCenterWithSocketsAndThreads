@@ -65,10 +65,6 @@ int main(int argc, char **argv) {
         argc
     );
 
-//    for (int i = 0; i < argc; i++) {
-//        cout << argv[i] << endl;
-//    }
-
     while ((opt = getopt(argc, argv, PROGRAM_OPTIONS)) != -1) {
         switch (opt) {
             case 'p':
@@ -118,7 +114,6 @@ int main(int argc, char **argv) {
 
     int inputDirectoryStringLength = socket->readNumber();
     inputDirectory = socket->readStringInChunks(inputDirectoryStringLength);
-//    cout << inputDirectory << endl;
 
     totalNumberOfFiles = Helper::getTotalFilePathsNumber(
         numberOfCountryNames,
@@ -126,8 +121,6 @@ int main(int argc, char **argv) {
         inputDirectoryStringLength,
         inputDirectory
     );
-
-//    cout << "T " << totalNumberOfFiles << endl;
 
     filesNames = Helper::getFilePathsNames(
         numberOfCountryNames,
@@ -182,7 +175,6 @@ int main(int argc, char **argv) {
             &mainThreadWaitToSendBloomFiltersConditionVariable,
             &mainThreadWaitToSendBloomFiltersLock
         );
-        cout << "Waited on " << numberOfThreadFinishedReadingFiles << endl;
     }
 
     if((
@@ -212,7 +204,6 @@ int main(int argc, char **argv) {
 
     // Send through sockets the number of expected bloom filters
     socket->writeNumber(numberOfBloomFiltersSent);
-    cout << "Will send " << numberOfBloomFiltersSent << endl;
 
     int i = 0;
     currentVirus = viruses->getHead();
@@ -222,12 +213,10 @@ int main(int argc, char **argv) {
         currentBloomFilter = bloomFiltersList->getHead();
         while(currentBloomFilter != NULL) {
             BloomFilter* temp = currentBloomFilter->getBloomFilter();
-            cout << "\t---" << temp->getVirusName() << " " << temp->getCountryName() << endl;
             if(temp == NULL) {
                 Helper::handleError("Error: Attempted sending null BloomFilter");
             }
             socket->writeBloomFilterInChunks(temp);
-            cout << "Send BF " << i << endl;
             i++;
             currentBloomFilter = currentBloomFilter->next;
         }
@@ -238,7 +227,6 @@ int main(int argc, char **argv) {
     // Monitor stay alive to serve the user requests
 //    while(true) {
 //        int typeOfRequest = socket->readNumber();
-//        cout << "OUAOY " << typeOfRequest << endl;
 //        if(typeOfRequest == TravelMonitorClient::TRAVEL_REQUEST) {
 //            citizenIdLength = socket->readNumber();
 //            citizenId = socket->readStringInChunks(citizenIdLength);
@@ -250,10 +238,6 @@ int main(int argc, char **argv) {
 //            virusNameLength = socket->readNumber();
 //            virusName = socket->readStringInChunks(virusNameLength);
 //
-//            cout << citizenId << endl;
-//            cout << dateAsString << endl;
-//            cout << countryFrom << endl;
-//            cout << virusName << endl;
 //        } else if (typeOfRequest == TravelMonitorClient::TRAVEL_STATS) {
 //
 //        } else if (typeOfRequest == TravelMonitorClient::ADD_VACCINATION_RECORDS) {
@@ -310,7 +294,6 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
         }
 
         if(cyclicBuffer[nextPositionOfBufferToBeRead] != NULL) {
-            cout << "Read " << cyclicBuffer[nextPositionOfBufferToBeRead] << " position " << nextPositionOfBufferToBeRead << " from thread " << pthread_self() << endl;
             fileReader->readAndUpdateStructures(cyclicBuffer[nextPositionOfBufferToBeRead]);
             cyclicBuffer[nextPositionOfBufferToBeRead] = NULL;
             nextPositionOfBufferToBeRead = (++nextPositionOfBufferToBeRead)%cyclicBufferSize;
@@ -356,7 +339,6 @@ void *threadReadFilesAndUpdateStructures(void* arg) {
         Helper::handleError("Error: main thread waiting to send mutex lock", error);
     }
 
-    cout << "Finished reading data" << endl;
     numberOfThreadFinishedReadingFiles++;
 
     if(numberOfThreadFinishedReadingFiles == numberOfThreads) {

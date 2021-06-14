@@ -145,6 +145,7 @@ char *Socket::readStringInChunks(int totalBytes, bool isFromServer) {
             Helper::handleError(READ_ERROR, errno);
         }
 
+
         if(readBytes == 0) {
             strncpy(string, rawBytes, chunk);
             string[this->bufferSize] = '\0';
@@ -241,6 +242,7 @@ void Socket::writeBitArrayInChunks(BitArray* bitArray, bool isFromServer) {
 
     while(writtenBytes < totalBytes) {
         chunk = ::write(fd, bitArray, this->bufferSize);
+
         if (chunk < 0) {
             Helper::handleError(WRITE_ERROR, errno + 5);
         }
@@ -291,6 +293,7 @@ BitArray* Socket::readBitArrayInChunks(bool isFromServer) {
         if (chunk < 0) {
             Helper::handleError(READ_ERROR, errno);
         }
+
 
         memcpy(bitArray + readBytes, rawBytes, chunk);
         readBytes += chunk;
@@ -349,6 +352,7 @@ BloomFilter *Socket::readBloomFilterInChunks(bool isFromServer) {
             Helper::handleError(READ_ERROR, errno);
         }
 
+
         memcpy(bloomFilter + readBytes, rawBytes, chunk);
         readBytes += chunk;
     }
@@ -370,8 +374,6 @@ void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter, bool isFromServe
 
     // While writing a BloomFilter, firstly we have to write it's pointer variables
     this->writeBitArrayInChunks(bloomFilter->getBitArray(), isFromServer);
-
-    cout << "Country: " << bloomFilter->getCountryName() << " and " << "Virus: " << bloomFilter->getVirusName() << endl;
 
     int countryNameLength = strlen(bloomFilter->getCountryName()) + 1;
     this->writeNumber(countryNameLength, isFromServer);
@@ -396,6 +398,7 @@ void Socket::writeBloomFilterInChunks(BloomFilter *bloomFilter, bool isFromServe
 
     while(writtenBytes < totalBytes) {
         chunk = ::write(fd, bloomFilter, this->bufferSize);
+
         if (chunk < 0) {
             Helper::handleError(WRITE_ERROR, errno + 3);
         }
